@@ -4,7 +4,6 @@ using MyApi.Data;
 
 namespace api.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
     public class ReservationController : ControllerBase
     {

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using api.Models.DTO;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyApi.Services;
 using System.ComponentModel.DataAnnotations;
@@ -18,13 +19,22 @@ namespace MyApi.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] LoginRequest request)
+        public async Task<IActionResult> Register([FromBody] RegisterResidentRequest request)
         {
-            var defaultRole = "Resident"; // Puedes permitir al usuario enviar el rol si lo deseas
-            var token = await _auth.RegisterAsync(request.Email, request.Password, defaultRole);
+            var defaultRole = "Resident";
+
+            var token = await _auth.RegisterAsync(
+                request.Email,
+                request.Password,
+                defaultRole,
+                request.ResidentName,
+                request.ApartmentInformation
+            );
+
             if (token == null) return BadRequest("El usuario ya existe.");
             return Ok(new { token });
         }
+
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
