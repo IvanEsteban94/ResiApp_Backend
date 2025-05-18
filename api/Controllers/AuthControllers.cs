@@ -1,8 +1,8 @@
 ﻿using api.Models.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MyApi.Models.DTO;
 using MyApi.Services;
-using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
 namespace MyApi.Controllers
@@ -31,16 +31,20 @@ namespace MyApi.Controllers
                 request.ApartmentInformation
             );
 
-            if (token == null) return BadRequest("El usuario ya existe.");
+            if (token == null)
+                return BadRequest("El usuario ya existe.");
+
             return Ok(new { token });
         }
-
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             var token = await _auth.LoginAsync(request.Email, request.Password);
-            if (token == null) return Unauthorized("Credenciales inválidas.");
+
+            if (token == null)
+                return Unauthorized("Credenciales inválidas.");
+
             return Ok(new { token });
         }
 
@@ -56,13 +60,17 @@ namespace MyApi.Controllers
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
             var email = User.Identity?.Name;
-            if (string.IsNullOrEmpty(email)) return Unauthorized();
+            if (string.IsNullOrEmpty(email))
+                return Unauthorized();
 
             var success = await _auth.ChangePasswordAsync(email, request.CurrentPassword, request.NewPassword);
-            if (!success) return BadRequest("La contraseña actual es incorrecta.");
+
+            if (!success)
+                return BadRequest("La contraseña actual es incorrecta.");
 
             return Ok(new { message = "Contraseña cambiada exitosamente" });
         }
+
         [HttpGet("welcome")]
         [Authorize]
         public IActionResult Welcome()
@@ -83,7 +91,6 @@ namespace MyApi.Controllers
             return Ok(new { message, email, role });
         }
 
-
         [HttpGet("validate-token")]
         [Authorize]
         public IActionResult ValidateToken()
@@ -93,15 +100,5 @@ namespace MyApi.Controllers
 
             return Ok(new { valid = true, email, role });
         }
-
-        public record ChangePasswordRequest(
-            [Required] string CurrentPassword,
-            [Required][MinLength(6)] string NewPassword
-        );
-
-        public record LoginRequest(
-            [Required][EmailAddress] string Email,
-            [Required][MinLength(6)] string Password
-        );
     }
 }

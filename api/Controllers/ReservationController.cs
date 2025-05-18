@@ -1,66 +1,84 @@
 ﻿using api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyApi.Data;
+using System.Linq;
 
 namespace api.Controllers
 {
     [Route("api/[controller]")]
+    [ApiController]
     public class ReservationController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _dbCongtext;
 
-        public ReservationController(ApplicationDbContext context)
+        public ReservationController(ApplicationDbContext db)
         {
-            _context = context;
+            _dbCongtext = db;
         }
 
-        // CREATE
-        [HttpPost]
-        public async Task<IActionResult> CreateReservation([FromBody] Reservation reservation)
+        [HttpGet("GetReservation")]
+        public IActionResult GetReservations()
         {
-            _context.Reservation.Add(reservation);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(ReadReservation), new { id = reservation.Id }, reservation);
+            var reservations = _dbCongtext.Reservation.ToList();
+            return Ok(new { success = true, data = reservations });
         }
 
-        // READ (por id)
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Reservation>> ReadReservation(int id)
+        [HttpGet("GetReservation/{id}")]
+        public IActionResult GetReservationById(int id)
         {
-            var reservation = await _context.Reservation.FindAsync(id);
+            var reservation = _dbCongtext.Reservation.FirstOrDefault(r => r.Id == id);
             if (reservation == null)
-                return NotFound();
+                return NotFound(new { success = false, message = "Reservation not found." });
 
-            return Ok(reservation);
+            return Ok(new { success = true, data = reservation });
         }
 
-        // UPDATE
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateReservation(int id, [FromBody] Reservation updated)
+        [HttpPost("CreateReservation")]
+        public IActionResult CreateReservation([FromBody] Reservation reservation)
         {
-            var reservation = await _context.Reservation.FindAsync(id);
-            if (reservation == null)
-                return NotFound();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            reservation.StartTime = updated.StartTime;
-            reservation.EndTime = updated.EndTime;
-            await _context.SaveChangesAsync();
+            _dbCongtext.Reservation.Add(reservation);
+            _dbCongtext.SaveChanges();
 
-            return NoContent();
+            return CreatedAtAction(nameof(GetReservationById), new { id = reservation.Id }, new { success = true, message = "Reservation created successfully." });
         }
 
-        // DELETE
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteReservation(int id)
+        [HttpPut("UpdateReservation/{id}")]
+        public IActionResult UpdateReservation(int id, [FromBody] Reservation updatedReservation)
         {
-            var reservation = await _context.Reservation.FindAsync(id);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var reservation = _dbCongtext.Reservation.FirstOrDefault(r => r.Id == id);
             if (reservation == null)
-                return NotFound();
+                return NotFound(new { success = false, message = "Reservation not found." });
 
-            _context.Reservation.Remove(reservation);
-            await _context.SaveChangesAsync();
+            reservation.StartTime = updatedReservation.StartTime;
+            reservation.EndTime = updatedReservation.EndTime;
+            reservation.ResidentId = updatedReservation.ResidentId;
+            reservation.SpaceId = updatedReservation.SpaceId;
 
-            return NoContent();
+            _dbCongtext.Reservation.Update(reservation);
+            _dbCongtext.SaveChanges();
+
+            return Ok(new { success = true, message = "Reservation updated successfully." });
+        }
+
+        [HttpDelete("DeleteReservation/{id}")]
+        [Authorize(Roles = "Admin")]
+        public IActionResult DeleteReservation(int id)
+        {
+            var reservation = _dbCongtext.Reservation.FirstOrDefault(r => r.Id == id);
+            if (reservation == null)
+                return NotFound(new { success = false, message = "Reservation not found." });
+
+            _dbCongtext.Reservation.Remove(reservation);
+            _dbCongtext.SaveChanges();
+
+            return Ok(new { success = true, message = "Reservation deleted successfully." });
         }
     }
 }

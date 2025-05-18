@@ -19,52 +19,40 @@ namespace MyApi.Services
             _config = config;
         }
 
-        public async Task<string?> RegisterAsync(string email, string password, string role, string residentName, string apartmentInfo)
+        public async Task<string?> RegisterAsync(string email, string password, string role, string? residentName = null, string? apartmentInfo = null)
         {
             if (await UserExists(email)) return null;
 
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
 
-            if (role == "Admin")
+            var user = new User
             {
-                var admin = new Admin { Email = email, PasswordHash = hashedPassword };
-                _context.Admin.Add(admin);
-            }
-            else
-            {
-                var resident = new Resident
-                {
-                    Email = email,
-                    PasswordHash = hashedPassword,
-                    ResidentName = residentName,
-                    ApartmentInformation = apartmentInfo
-                };
-                _context.Resident.Add(resident);
-            }
+                Email = email,
+                PasswordHash = hashedPassword,
+                Role = role,
+                ResidentName = role == "Resident" ? residentName : null,
+                ApartmentInformation = role == "Resident" ? apartmentInfo : null
+            };
 
+            _context.User.Add(user);
             await _context.SaveChangesAsync();
+
             return GenerateJwtToken(email, role);
         }
 
-
         public async Task<string?> LoginAsync(string email, string password)
         {
-            var admin = await _context.Admin.FirstOrDefaultAsync(a => a.Email == email);
-            if (admin != null && !string.IsNullOrEmpty(admin.PasswordHash) && BCrypt.Net.BCrypt.Verify(password, admin.PasswordHash))
-                return GenerateJwtToken(email, "Admin");
+            var user = await _context.User.FirstOrDefaultAsync(u => u.Email == email);
 
-            var resident = await _context.Resident.FirstOrDefaultAsync(r => r.Email == email);
-            if (resident != null && !string.IsNullOrEmpty(resident.PasswordHash) && BCrypt.Net.BCrypt.Verify(password, resident.PasswordHash))
-                return GenerateJwtToken(email, "Resident");
+            if (user != null && !string.IsNullOrEmpty(user.PasswordHash) && BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
+                return GenerateJwtToken(email, user.Role);
 
             return null;
         }
 
-
         private async Task<bool> UserExists(string email)
         {
-            return await _context.Admin.AnyAsync(a => a.Email == email) ||
-                   await _context.Resident.AnyAsync(r => r.Email == email);
+            return await _context.User.AnyAsync(u => u.Email == email);
         }
 
         private string GenerateJwtToken(string email, string role)
@@ -87,10 +75,10 @@ namespace MyApi.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
         public async Task<bool> ChangePasswordAsync(string email, string currentPassword, string newPassword)
         {
-            var user = await _context.Admin.FirstOrDefaultAsync(a => a.Email == email)
-                    as IUser ?? await _context.Resident.FirstOrDefaultAsync(r => r.Email == email);
+            var user = await _context.User.FirstOrDefaultAsync(u => u.Email == email);
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash))
                 return false;
@@ -99,7 +87,5 @@ namespace MyApi.Services
             await _context.SaveChangesAsync();
             return true;
         }
-
     }
-
 }
