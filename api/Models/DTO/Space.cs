@@ -1,4 +1,5 @@
-﻿namespace api.Models.DTO
+﻿
+namespace api.Models.DTO
 {
     public class Space
     {
