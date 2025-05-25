@@ -15,5 +15,7 @@ namespace api.Models.DTO
         public string Password { get; set; } = string.Empty;
 
         public string? ApartmentInformation { get; set; }
+        public string Role { get; set; }
+
     }
 }

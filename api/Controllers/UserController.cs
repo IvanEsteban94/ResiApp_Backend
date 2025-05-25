@@ -17,53 +17,34 @@ namespace api.Controllers
             _db = db;
         }
 
-        // GET api/user/residents
-        [HttpGet("residents")]
-        public IActionResult GetResidents()
+        // GET api/user?role=Admin or role=Resident (optional)
+        [HttpGet]
+        public IActionResult GetUsers([FromQuery] string? role)
         {
-            var residents = _db.User.Where(u => u.Role == "Resident").ToList();
-            if (!residents.Any())
-                return NotFound(new { success = false, message = "No residents found." });
+            var users = string.IsNullOrEmpty(role)
+                ? _db.User.ToList()
+                : _db.User.Where(u => u.Role == role).ToList();
 
-            return Ok(new { success = true, data = residents });
+            if (!users.Any())
+                return NotFound(new { success = false, message = "No users found." });
+
+            return Ok(new { success = true, data = users });
         }
 
-        // GET api/user/admins
-        [HttpGet("admins")]
-        public IActionResult GetAdmins()
+        // GET api/user/5
+        [HttpGet("{id}")]
+        public IActionResult GetUserById(int id)
         {
-            var admins = _db.User.Where(u => u.Role == "Admin").ToList();
-            if (!admins.Any())
-                return NotFound(new { success = false, message = "No admins found." });
+            var user = _db.User.FirstOrDefault(u => u.Id == id);
+            if (user == null)
+                return NotFound(new { success = false, message = "User not found." });
 
-            return Ok(new { success = true, data = admins });
+            return Ok(new { success = true, data = user });
         }
 
-        // GET api/user/residents/5
-        [HttpGet("residents/{id}")]
-        public IActionResult GetResidentById(int id)
-        {
-            var resident = _db.User.FirstOrDefault(u => u.Id == id && u.Role == "Resident");
-            if (resident == null)
-                return NotFound(new { success = false, message = "Resident not found." });
-
-            return Ok(new { success = true, data = resident });
-        }
-
-        // GET api/user/admins/5
-        [HttpGet("admins/{id}")]
-        public IActionResult GetAdminById(int id)
-        {
-            var admin = _db.User.FirstOrDefault(u => u.Id == id && u.Role == "Admin");
-            if (admin == null)
-                return NotFound(new { success = false, message = "Admin not found." });
-
-            return Ok(new { success = true, data = admin });
-        }
-
-        // POST api/user/residents
-        [HttpPost("residents")]
-        public IActionResult CreateResident([FromBody] UserCreateDto dto)
+        // POST api/user
+        [HttpPost]
+        public IActionResult CreateUser([FromBody] UserCreateDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -71,125 +52,60 @@ namespace api.Controllers
             if (_db.User.Any(u => u.Email == dto.Email))
                 return Conflict(new { success = false, message = "Email already exists." });
 
-            var resident = new User
+            var user = new User
             {
                 ResidentName = dto.ResidentName,
                 Email = dto.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 ApartmentInformation = dto.ApartmentInformation,
-                Role = "Resident"
+                Role = dto.Role // "Admin" or "Resident"
             };
 
-            _db.User.Add(resident);
+            _db.User.Add(user);
             _db.SaveChanges();
 
-            return CreatedAtAction(nameof(GetResidentById), new { id = resident.Id }, new { success = true, id = resident.Id, message = "Resident created successfully." });
+            return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, new { success = true, id = user.Id, message = "User created successfully." });
         }
 
-        // POST api/user/admins
-        [HttpPost("admins")]
-        public IActionResult CreateAdmin([FromBody] UserCreateDto dto)
+        // PUT api/user/5
+        [HttpPut("{id}")]
+        public IActionResult UpdateUser(int id, [FromBody] UserCreateDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (_db.User.Any(u => u.Email == dto.Email))
-                return Conflict(new { success = false, message = "Email already exists." });
+            var user = _db.User.FirstOrDefault(u => u.Id == id);
+            if (user == null)
+                return NotFound(new { success = false, message = "User not found." });
 
-            var admin = new User
-            {
-                ResidentName = dto.ResidentName,
-                Email = dto.Email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                ApartmentInformation = dto.ApartmentInformation,
-                Role = "Admin"
-            };
-
-            _db.User.Add(admin);
-            _db.SaveChanges();
-
-            return CreatedAtAction(nameof(GetAdminById), new { id = admin.Id }, new { success = true, id = admin.Id, message = "Admin created successfully." });
-        }
-
-        // PUT api/user/residents/5
-        [HttpPut("residents/{id}")]
-        public IActionResult UpdateResident(int id, [FromBody] UserCreateDto dto)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var resident = _db.User.FirstOrDefault(u => u.Id == id && u.Role == "Resident");
-            if (resident == null)
-                return NotFound(new { success = false, message = "Resident not found." });
-
-            resident.ResidentName = dto.ResidentName;
-            resident.Email = dto.Email;
-            resident.ApartmentInformation = dto.ApartmentInformation;
+            user.ResidentName = dto.ResidentName;
+            user.Email = dto.Email;
+            user.ApartmentInformation = dto.ApartmentInformation;
+            user.Role = dto.Role;
 
             if (!string.IsNullOrEmpty(dto.Password))
             {
-                resident.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             }
 
-            _db.User.Update(resident);
+            _db.User.Update(user);
             _db.SaveChanges();
 
-            return Ok(new { success = true, message = "Resident updated successfully." });
+            return Ok(new { success = true, message = "User updated successfully." });
         }
 
-        // PUT api/user/admins/5
-        [HttpPut("admins/{id}")]
-        public IActionResult UpdateAdmin(int id, [FromBody] UserCreateDto dto)
+        // DELETE api/user/5
+        [HttpDelete("{id}")]
+        public IActionResult DeleteUser(int id)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var user = _db.User.FirstOrDefault(u => u.Id == id);
+            if (user == null)
+                return NotFound(new { success = false, message = "User not found." });
 
-            var admin = _db.User.FirstOrDefault(u => u.Id == id && u.Role == "Admin");
-            if (admin == null)
-                return NotFound(new { success = false, message = "Admin not found." });
-
-            admin.ResidentName = dto.ResidentName;
-            admin.Email = dto.Email;
-            admin.ApartmentInformation = dto.ApartmentInformation;
-
-            if (!string.IsNullOrEmpty(dto.Password))
-            {
-                admin.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
-            }
-
-            _db.User.Update(admin);
+            _db.User.Remove(user);
             _db.SaveChanges();
 
-            return Ok(new { success = true, message = "Admin updated successfully." });
-        }
-
-        // DELETE api/user/residents/5
-        [HttpDelete("residents/{id}")]
-        public IActionResult DeleteResident(int id)
-        {
-            var resident = _db.User.FirstOrDefault(u => u.Id == id && u.Role == "Resident");
-            if (resident == null)
-                return NotFound(new { success = false, message = "Resident not found." });
-
-            _db.User.Remove(resident);
-            _db.SaveChanges();
-
-            return Ok(new { success = true, message = "Resident deleted successfully." });
-        }
-
-        // DELETE api/user/admins/5
-        [HttpDelete("admins/{id}")]
-        public IActionResult DeleteAdmin(int id)
-        {
-            var admin = _db.User.FirstOrDefault(u => u.Id == id && u.Role == "Admin");
-            if (admin == null)
-                return NotFound(new { success = false, message = "Admin not found." });
-
-            _db.User.Remove(admin);
-            _db.SaveChanges();
-
-            return Ok(new { success = true, message = "Admin deleted successfully." });
+            return Ok(new { success = true, message = "User deleted successfully." });
         }
     }
 }
-
