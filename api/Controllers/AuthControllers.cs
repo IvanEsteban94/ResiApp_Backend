@@ -32,7 +32,7 @@ namespace MyApi.Controllers
             );
 
             if (token == null)
-                return BadRequest("El usuario ya existe.");
+                return BadRequest("The user already exists.");
 
             return Ok(new { token });
         }
@@ -40,23 +40,17 @@ namespace MyApi.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var token = await _auth.LoginAsync(request.Email, request.Password);
+            var response = await _auth.LoginAsync(request.Email, request.Password);
 
-            if (token == null)
-                return Unauthorized("Credenciales inválidas.");
+            if (response == null)
+                return Unauthorized("Invalid credentials.");
 
-            return Ok(new { token });
+            return Ok(new { token = response.Token, role = response.Role });
         }
 
-        [HttpGet("protected")]
-        [Authorize]
-        public IActionResult Protected()
-        {
-            return Ok(new { message = "Este endpoint está protegido", user = User.Identity?.Name });
-        }
-
+     
         [HttpPost("change-password")]
-        [Authorize]
+       
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
             var email = User.Identity?.Name;
@@ -66,39 +60,13 @@ namespace MyApi.Controllers
             var success = await _auth.ChangePasswordAsync(email, request.CurrentPassword, request.NewPassword);
 
             if (!success)
-                return BadRequest("La contraseña actual es incorrecta.");
+                return BadRequest("The current password is incorrect.");
 
-            return Ok(new { message = "Contraseña cambiada exitosamente" });
+            return Ok(new { message = "Password changed successfully" });
         }
 
-        [HttpGet("welcome")]
-        [Authorize]
-        public IActionResult Welcome()
-        {
-            var email = User.Identity?.Name;
-            var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+        
 
-            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(role))
-                return Unauthorized();
-
-            var message = role switch
-            {
-                "Admin" => $"Bienvenido, administrador {email}.",
-                "Resident" => $"Bienvenido, residente {email}.",
-                _ => $"Bienvenido, {email}."
-            };
-
-            return Ok(new { message, email, role });
-        }
-
-        [HttpGet("validate-token")]
-        [Authorize]
-        public IActionResult ValidateToken()
-        {
-            var email = User.Identity?.Name;
-            var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-
-            return Ok(new { valid = true, email, role });
-        }
+        
     }
 }

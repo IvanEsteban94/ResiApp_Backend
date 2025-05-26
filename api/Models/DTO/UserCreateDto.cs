@@ -4,18 +4,18 @@ namespace api.Models.DTO
 {
     public class UserCreateDto
     {
+
         public string? ResidentName { get; set; }
 
-        [Required]
-        [EmailAddress]
-        public string Email { get; set; } = string.Empty;
+        [EmailAddress(ErrorMessage = "The Email field is not a valid e-mail address.")]
+        public string? Email { get; set; }
 
-        [Required]
-        [MinLength(6)]
-        public string Password { get; set; } = string.Empty;
+        [MinLength(6, ErrorMessage = "The field Password must be a string or array type with a minimum length of '6'.")]
+        public string? Password { get; set; }
 
         public string? ApartmentInformation { get; set; }
-        public string Role { get; set; }
+
+        public string? Role { get; set; }
 
     }
 }

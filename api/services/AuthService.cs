@@ -5,6 +5,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using api.Models.DTO;
 
 namespace MyApi.Services
 {
@@ -40,14 +41,20 @@ namespace MyApi.Services
             return GenerateJwtToken(email, role);
         }
 
-        public async Task<string?> LoginAsync(string email, string password)
+        public async Task<LoginResponse?> LoginAsync(string email, string password)
         {
             var user = await _context.User.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
+                return null;
 
-            if (user != null && !string.IsNullOrEmpty(user.PasswordHash) && BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
-                return GenerateJwtToken(email, user.Role);
+           
+            var token = GenerateJwtToken(user.Email, user.Role);
 
-            return null;
+            return new LoginResponse
+            {
+                Token = token,
+                Role = user.Role
+            };
         }
 
         private async Task<bool> UserExists(string email)
@@ -59,9 +66,9 @@ namespace MyApi.Services
         {
             var claims = new[]
             {
-                new Claim(ClaimTypes.Name, email),
-                new Claim(ClaimTypes.Role, role)
-            };
+                    new Claim(ClaimTypes.Name, email),
+                    new Claim(ClaimTypes.Role, role)
+                };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

@@ -7,13 +7,12 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Configuración de DbContext y servicios
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<AuthService>();
 
-// 2. Configuración de autenticación JWT
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -25,7 +24,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
         if (keyBytes.Length < 32)
         {
-            throw new ArgumentException("La clave JWT debe tener al menos 256 bits (32 bytes).");
+            throw new ArgumentException("The JWT key must be at least 256 bits (32 bytes).");
         }
 
         options.TokenValidationParameters = new TokenValidationParameters
@@ -37,16 +36,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = jwtAudience,
             IssuerSigningKey = new SymmetricSecurityKey(keyBytes)
         };
-    });
 
-// 3. Configuración de autorización con política "OnlyResidente"
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("OnlyResidente", policy => policy.RequireRole("Residente"));
     options.AddPolicy("OnlyAdmin", policy => policy.RequireRole("Admin"));
 });
 
-// 4. Configuración de CORS, controladores y Swagger
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -58,8 +55,6 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-// 5. Configuración de la aplicación
 var app = builder.Build();
 
 app.UseCors("AllowAll");
@@ -72,7 +67,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Agregar autenticación y autorización al pipeline
 app.UseAuthentication();
 app.UseAuthorization();
 

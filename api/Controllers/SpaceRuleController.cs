@@ -43,6 +43,19 @@ namespace api.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteSpaceRule(int id)
+        {
+            var rule = await _context.SpaceRule.FindAsync(id);
+            if (rule == null)
+                return NotFound(new { success = false, message = "Space rule not found." });
+
+            _context.SpaceRule.Remove(rule);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, message = "Space rule deleted successfully." });
+        }
+
     }
 }
 
