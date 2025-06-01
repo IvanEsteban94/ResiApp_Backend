@@ -2,11 +2,8 @@
 {
     public class CreateSpaceRuleDto
     {
-        public string Rule { get; set; }
-        public int SpaceId
-        {
-            get; set;
-        }
-}
+        public required string Rule { get; set; }
+        public int SpaceId { get; set; }
+    }
 }
 

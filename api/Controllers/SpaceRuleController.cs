@@ -1,12 +1,13 @@
 ﻿using api.Models;
+using api.Models.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MyApi.Data;
-using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace api.Controllers
 {
-    // Controllers/SpaceRuleController.cs
     [ApiController]
     [Route("api/[controller]")]
     public class SpaceRuleController : ControllerBase
@@ -19,10 +20,20 @@ namespace api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateSpaceRule([FromBody] SpaceRule rule)
+        public async Task<IActionResult> CreateSpaceRule([FromBody] CreateSpaceRuleDto dto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var rule = new SpaceRule
+            {
+                Rule = dto.Rule,
+                SpaceId = dto.SpaceId
+            };
+
             _context.SpaceRule.Add(rule);
             await _context.SaveChangesAsync();
+
             return CreatedAtAction(nameof(ReadSpaceRule), new { id = rule.Id }, rule);
         }
 
@@ -43,6 +54,7 @@ namespace api.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSpaceRule(int id)
         {
@@ -56,6 +68,13 @@ namespace api.Controllers
             return Ok(new { success = true, message = "Space rule deleted successfully." });
         }
 
+        [HttpGet("rules")]
+        public async Task<ActionResult<IEnumerable<SpaceRule>>> GetAllSpaceRules()
+        {
+            var rules = await _context.SpaceRule.ToListAsync();
+            return Ok(rules);
+        }
+
+        
     }
 }
-
