@@ -7,12 +7,14 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configuración de base de datos
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Servicios personalizados
 builder.Services.AddScoped<AuthService>();
 
-
+// Autenticación JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -36,14 +38,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = jwtAudience,
             IssuerSigningKey = new SymmetricSecurityKey(keyBytes)
         };
+    }); // <-- AQUÍ CIERRA el AddJwtBearer correctamente
 
+// Autorización por roles
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("OnlyResidente", policy => policy.RequireRole("Residente"));
     options.AddPolicy("OnlyAdmin", policy => policy.RequireRole("Admin"));
 });
 
-
+// Configuración de CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -52,11 +56,14 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Otros servicios
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
 
+// Middleware
 app.UseCors("AllowAll");
 
 if (app.Environment.IsDevelopment())
@@ -71,4 +78,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
 app.Run();
