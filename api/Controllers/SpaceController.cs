@@ -43,6 +43,29 @@ namespace api.Controllers
 
             return Ok(result);
         }
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<ReadSpaceDto>>> GetAllSpaces()
+        {
+            var spaces = await _context.Space
+                .Include(s => s.SpaceRules) 
+                .ToListAsync();
+
+            var result = spaces.Select(space => new ReadSpaceDto
+            {
+                Id = space.Id,
+                SpaceName = space.SpaceName,
+                Capacity = space.Capacity,
+                Availability = space.Availability,
+                SpaceRules = space.SpaceRules?.Select(r => new ReadSpaceRuleDto
+                {
+                    Id = r.Id,
+                    Rule = r.Rule
+                }).ToList() ?? new List<ReadSpaceRuleDto>()
+            });
+
+            return Ok(result);
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> CreateSpace([FromBody] CreateSpaceDto dto)
