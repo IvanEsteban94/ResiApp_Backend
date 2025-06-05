@@ -48,16 +48,13 @@ namespace MyApi.Controllers
             return Ok(new { token = response.Token, role = response.Role });
         }
 
-     
         [HttpPost("change-password")]
-     
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
-            var email = User.Identity?.Name;
-            if (string.IsNullOrEmpty(email))
-                return Unauthorized();
+            if (string.IsNullOrEmpty(request.Email))
+                return BadRequest("Email is required.");
 
-            var success = await _auth.ChangePasswordAsync(email, request.CurrentPassword, request.NewPassword);
+            var success = await _auth.ChangePasswordAsync(request.Email, request.CurrentPassword, request.NewPassword);
 
             if (!success)
                 return BadRequest("The current password is incorrect.");
@@ -65,8 +62,21 @@ namespace MyApi.Controllers
             return Ok(new { message = "Password changed successfully" });
         }
 
-        
 
-        
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            var authHeader = Request.Headers["Authorization"].ToString();
+
+            if (string.IsNullOrWhiteSpace(authHeader) || !authHeader.StartsWith("Bearer "))
+            {
+                return Ok(new { message = "No token provided, logout considered successful." });
+            }
+
+            var token = authHeader.Substring("Bearer ".Length);
+            await _auth.LogoutAsync(token);
+
+            return Ok(new { message = "Logged out successfully" });
+        }
     }
 }

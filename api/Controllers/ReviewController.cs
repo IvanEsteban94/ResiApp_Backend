@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using api.Models;
 using MyApi.Data;
+using api.Models.DTO;
 
 namespace api.Controllers
 {
@@ -44,25 +45,6 @@ namespace api.Controllers
         }
 
        
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateReview(int id, [FromBody] Review updatedReview)
-        {
-            if (id != updatedReview.Id)
-                return BadRequest();
-
-            var existingReview = await _context.Review.FindAsync(id);
-            if (existingReview == null)
-                return NotFound();
-
-            existingReview.Rating = updatedReview.Rating;
-            existingReview.Comment = updatedReview.Comment;
-            existingReview.ResidentId = updatedReview.ResidentId;
-            existingReview.SpaceId = updatedReview.SpaceId;
-
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
 
        
         [HttpDelete("{id}")]
@@ -73,6 +55,29 @@ namespace api.Controllers
                 return NotFound();
 
             _context.Review.Remove(review);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateReview(int id, [FromBody] UpdateReviewDto dto)
+        {
+            var existingReview = await _context.Review.FindAsync(id);
+            if (existingReview == null)
+                return NotFound();
+
+            if (dto.Rating.HasValue)
+                existingReview.Rating = dto.Rating.Value;
+
+            if (!string.IsNullOrWhiteSpace(dto.Comment))
+                existingReview.Comment = dto.Comment;
+
+            if (dto.ResidentId.HasValue)
+                existingReview.ResidentId = dto.ResidentId.Value;
+
+            if (dto.SpaceId.HasValue)
+                existingReview.SpaceId = dto.SpaceId.Value;
+
             await _context.SaveChangesAsync();
 
             return NoContent();

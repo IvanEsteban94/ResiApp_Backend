@@ -1,9 +1,11 @@
-﻿namespace api.Models.DTO
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace api.Models.DTO
 {
     public class CreateSpaceRuleDto
     {
-        public required string Rule { get; set; }
-        public int SpaceId { get; set; }
+        [Required]
+        public string Rule { get; set; }
     }
 }
 

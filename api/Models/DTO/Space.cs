@@ -1,4 +1,5 @@
 ﻿
+
 namespace api.Models.DTO
 {
     public class Space
@@ -8,7 +9,8 @@ namespace api.Models.DTO
         public int Capacity { get; set; }
         public bool Availability { get; set; }
 
-       
-        public ICollection<SpaceRule> SpaceRules { get; set; }
+        // FK a SpaceRule
+        public int? SpaceRuleId { get; set; }
+        public SpaceRule SpaceRule { get; set; }
     }
 }

@@ -18,7 +18,7 @@ namespace api.Controllers
         }
 
         // GET api/user
-        [HttpGet]
+        [HttpGet("User")]
         public IActionResult GetUsers()
         {
             var users = _db.User.ToList();
@@ -41,7 +41,7 @@ namespace api.Controllers
         }
 
         // POST api/user
-        [HttpPost]
+        [HttpPost("User")]
         public IActionResult CreateUser([FromBody] UserCreateDto dto)
         {
             if (!ModelState.IsValid)

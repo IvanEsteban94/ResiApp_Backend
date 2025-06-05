@@ -7,6 +7,9 @@
         public int Capacity { get; set; }
         public bool Availability { get; set; }
 
+        public int? SpaceRuleId { get; set; }
+        public SpaceRule SpaceRule { get; set; }
+
         public ICollection<SpaceRule> SpaceRules { get; set; }
     }
 }

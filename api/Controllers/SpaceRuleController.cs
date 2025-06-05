@@ -22,37 +22,64 @@ namespace api.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateSpaceRule([FromBody] CreateSpaceRuleDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var rule = new SpaceRule
             {
-                Rule = dto.Rule,
-                SpaceId = dto.SpaceId
+                Rule = dto.Rule
             };
 
-            _context.SpaceRule.Add(rule);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.SpaceRule.Add(rule);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error al guardar regla en la base de datos.", detail = ex.Message });
+            }
 
-            return CreatedAtAction(nameof(ReadSpaceRule), new { id = rule.Id }, rule);
+            var result = new ReadSpaceRuleDto
+            {
+                Id = rule.Id,
+                Rule = rule.Rule
+            };
+
+            return CreatedAtAction(nameof(ReadSpaceRule), new { id = rule.Id }, result);
         }
 
+
         [HttpGet("{id}")]
-        public async Task<ActionResult<SpaceRule>> ReadSpaceRule(int id)
+        public async Task<ActionResult<ReadSpaceRuleDto>> ReadSpaceRule(int id)
         {
             var rule = await _context.SpaceRule.FindAsync(id);
             if (rule == null) return NotFound();
-            return rule;
+
+            var result = new ReadSpaceRuleDto
+            {
+                Id = rule.Id,
+                Rule = rule.Rule
+            };
+
+            return Ok(result);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateSpaceRule(int id, [FromBody] SpaceRule updatedRule)
+        public async Task<IActionResult> UpdateSpaceRule(int id, [FromBody] UpdateSpaceRuleDto dto)
         {
-            if (id != updatedRule.Id) return BadRequest();
+            var rule = await _context.SpaceRule.FindAsync(id);
+            if (rule == null) return NotFound();
 
-            _context.Entry(updatedRule).State = EntityState.Modified;
+            if (!string.IsNullOrEmpty(dto.Rule))
+                rule.Rule = dto.Rule;
+
             await _context.SaveChangesAsync();
-            return NoContent();
+
+            var result = new ReadSpaceRuleDto
+            {
+                Id = rule.Id,
+                Rule = rule.Rule
+            };
+
+            return Ok(result);
         }
 
         [HttpDelete("{id}")]
@@ -68,13 +95,18 @@ namespace api.Controllers
             return Ok(new { success = true, message = "Space rule deleted successfully." });
         }
 
-        [HttpGet("rules")]
-        public async Task<ActionResult<IEnumerable<SpaceRule>>> GetAllSpaceRules()
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<ReadSpaceRuleDto>>> GetAllSpaceRules()
         {
             var rules = await _context.SpaceRule.ToListAsync();
-            return Ok(rules);
-        }
 
-        
+            var result = rules.ConvertAll(rule => new ReadSpaceRuleDto
+            {
+                Id = rule.Id,
+                Rule = rule.Rule
+            });
+
+            return Ok(result);
+        }
     }
 }

@@ -80,5 +80,62 @@ namespace api.Controllers
 
             return Ok(new { success = true, message = "Reservation deleted successfully." });
         }
+        [HttpGet("GetAvailableSlots")]
+        public IActionResult GetAvailableSlots([FromQuery] int spaceId, [FromQuery] DateTime date, [FromQuery] int slotMinutes = 60)
+        {
+            var space = _dbCongtext.Space.FirstOrDefault(s => s.Id == spaceId);
+            if (space == null)
+            {
+                return NotFound(new { success = false, message = "Space not found." });
+            }
+
+            var startOfDay = date.Date.AddHours(8);
+            var endOfDay = date.Date.AddHours(20);
+            var reservations = _dbCongtext.Reservation
+                .Where(r => r.SpaceId == spaceId && r.StartTime.Date == date.Date)
+                .OrderBy(r => r.StartTime)
+                .ToList();
+
+            var availableSlots = new List<object>();
+            var currentStart = startOfDay;
+
+            foreach (var reservation in reservations)
+            {
+                if (reservation.StartTime > currentStart)
+                {
+                    var gap = reservation.StartTime - currentStart;
+                    while (gap.TotalMinutes >= slotMinutes)
+                    {
+                        availableSlots.Add(new
+                        {
+                            SpaceName = space.SpaceName,
+                            TimeRange = $"{currentStart.ToString("h:mm tt")} to {currentStart.AddMinutes(slotMinutes).ToString("h:mm tt")}"
+                        });
+
+                        currentStart = currentStart.AddMinutes(slotMinutes);
+                        gap = reservation.StartTime - currentStart;
+                    }
+                }
+
+                if (reservation.EndTime > currentStart)
+                {
+                    currentStart = reservation.EndTime;
+                }
+            }
+
+            while (currentStart.AddMinutes(slotMinutes) <= endOfDay)
+            {
+                availableSlots.Add(new
+                {
+                    SpaceName = space.SpaceName,
+                    TimeRange = $"{currentStart.ToString("h:mm tt")} to {currentStart.AddMinutes(slotMinutes).ToString("h:mm tt")}"
+                });
+
+                currentStart = currentStart.AddMinutes(slotMinutes);
+            }
+
+            return Ok(new { success = true, data = availableSlots });
+        }
+
     }
 }
