@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace api.Models.DTO
+namespace api.Dtos
 {
     public class CreateSpaceDto
     {
@@ -8,6 +8,5 @@ namespace api.Models.DTO
         public int Capacity { get; set; }
         public bool Availability { get; set; }
         public int? SpaceRuleId { get; set; }
-
     }
 }

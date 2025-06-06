@@ -7,9 +7,7 @@
         public int Capacity { get; set; }
         public bool Availability { get; set; }
 
+        // Cambiar a int? para que soporte null
         public int? SpaceRuleId { get; set; }
-        public SpaceRule SpaceRule { get; set; }
-
-        public ICollection<SpaceRule> SpaceRules { get; set; }
     }
 }
