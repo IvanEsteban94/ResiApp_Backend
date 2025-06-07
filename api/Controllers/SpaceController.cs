@@ -1,5 +1,6 @@
 ﻿using api.Dtos;
 using api.Models;
+using api.Models.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MyApi.Data;
@@ -17,63 +18,46 @@ namespace api.Controllers
             _context = context;
         }
 
-        // Fix for CS0266 and CS8629: Ensure proper handling of nullable int (int?) to int conversion
-        // and null checks to avoid runtime issues.
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<SpaceDto>>> GetAllSpaces()
         {
             var spaces = await _context.Space
+                .Include(s => s.SpaceRule)  // Asegúrate que la entidad Space tiene la propiedad de navegación SpaceRule
                 .Select(s => new SpaceDto
                 {
                     Id = s.Id,
                     SpaceName = s.SpaceName,
                     Capacity = s.Capacity,
                     Availability = s.Availability,
-                    SpaceRuleId = s.SpaceRuleId ?? 0 // Explicitly handle null by providing a default value
+                    SpaceRules = s.SpaceRule != null
+                        ? new List<SpaceRule>
+                            {
+                        new SpaceRule
+                        {
+                            Id = s.SpaceRule.Id,
+                            Rule = s.SpaceRule.Rule
+                        }
+                            }
+                        : new List<SpaceRule>()
                 })
                 .ToListAsync();
 
             return Ok(spaces);
         }
 
-        // Método opcional para detectar espacios con SpaceRuleId inválidos (null o 0)
-        [HttpGet("invalid-spaces")]
-        public async Task<ActionResult<IEnumerable<SpaceDto>>> GetInvalidSpaces()
-        {
-            var invalidSpaces = await _context.Space
-                .Where(s => s.SpaceRuleId == 0 || s.SpaceRuleId == null)
-                .Select(s => new SpaceDto
-                {
-                    Id = s.Id,
-                    SpaceName = s.SpaceName,
-                    Capacity = s.Capacity,
-                    Availability = s.Availability,
-                    SpaceRuleId = s.SpaceRuleId ?? 0 // Explicitly handle null by providing a default value
-                })
-                .ToListAsync();
-
-            if (invalidSpaces.Count == 0)
-            {
-                return Ok("No hay espacios con SpaceRuleId inválido o nulo.");
-            }
-
-            return Ok(invalidSpaces);
-        }
 
 
-        // GET: api/space/5
+
+
         [HttpGet("{id}")]
         public async Task<ActionResult<SpaceDto>> GetSpace(int id)
         {
-            var space = await _context.Space.FindAsync(id);
+            var space = await _context.Space
+                .Include(s => s.SpaceRule) // Asegura que SpaceRule se incluya
+                .FirstOrDefaultAsync(s => s.Id == id);
 
             if (space == null) return NotFound();
-
-            if (space.SpaceRuleId == null || space.SpaceRuleId == 0)
-            {
-                return StatusCode(500, "El registro tiene SpaceRuleId inválido o nulo.");
-            }
 
             var dto = new SpaceDto
             {
@@ -81,11 +65,21 @@ namespace api.Controllers
                 SpaceName = space.SpaceName,
                 Capacity = space.Capacity,
                 Availability = space.Availability,
-                SpaceRuleId = space.SpaceRuleId.Value // Explicitly access the value of the nullable type
+                SpaceRules = space.SpaceRule != null
+                    ? new List<SpaceRule>   // <-- corregido aquí
+                    {
+               new SpaceRule
+               {
+                   Id = space.SpaceRule.Id,
+                   Rule = space.SpaceRule.Rule
+               }
+                    }
+                    : new List<SpaceRule>()
             };
 
             return Ok(dto);
         }
+
 
         // POST: api/space
         [HttpPost]
@@ -119,7 +113,7 @@ namespace api.Controllers
                 SpaceName = space.SpaceName,
                 Capacity = space.Capacity,
                 Availability = space.Availability,
-                SpaceRuleId = space.SpaceRuleId.Value
+                SpaceRules = new List<SpaceRule>() 
             };
 
             return CreatedAtAction(nameof(GetSpace), new { id = space.Id }, resultDto);

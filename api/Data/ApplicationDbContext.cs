@@ -12,7 +12,9 @@ namespace MyApi.Data
         public DbSet<SpaceRule> SpaceRule { get; set; } = null!;
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-            : base(options) { }
+            : base(options) {
+
+        }
 
      
     }

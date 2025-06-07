@@ -1,10 +1,13 @@
-﻿namespace api.Models
+﻿using System.Text.Json.Serialization;
+
+namespace api.Models
 {
     public class SpaceRule
     {
         public int Id { get; set; }
-        public string Rule { get; set; }
+        public string Rule { get; set; } = string.Empty;
 
-        public ICollection<Space> Spaces { get; set; } = new List<Space>();
+        [JsonIgnore]
+        public List<Space> Spaces { get; set; } = new();
     }
 }
