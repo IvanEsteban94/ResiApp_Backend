@@ -21,6 +21,45 @@ namespace api.Controllers
         {
             _dbContext = db;
         }
+        [HttpGet("GetAllReservations")]
+        public async Task<IActionResult> GetAllReservations()
+        {
+            var reservations = await _dbContext.Reservation
+                .Include(r => r.Resident)
+                .Include(r => r.Space)
+                    .ThenInclude(s => s.SpaceRule)
+                .ToListAsync();
+
+            var response = reservations.Select(reservation => new
+            {
+                reservation.Id,
+                reservation.StartTime,
+                reservation.EndTime,
+                Resident = new
+                {
+                    reservation.Resident.Id,
+                    reservation.Resident.Email,
+                    reservation.Resident.Role,
+                    reservation.Resident.ResidentName,
+                    reservation.Resident.ApartmentInformation
+                },
+                Space = new
+                {
+                    reservation.Space.Id,
+                    reservation.Space.SpaceName,
+                    reservation.Space.Capacity,
+                    reservation.Space.Availability,
+                    Rule = reservation.Space.SpaceRule == null ? null : new
+                    {
+                        reservation.Space.SpaceRule.Id,
+                        reservation.Space.SpaceRule.Rule
+                    }
+                }
+            });
+
+            return Ok(new { success = true, data = response });
+        }
+
         [HttpGet("GetReservation/{id}")]
         public async Task<IActionResult> GetReservationById(int id)
         {
