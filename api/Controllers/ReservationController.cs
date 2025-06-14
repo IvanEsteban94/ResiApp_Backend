@@ -21,16 +21,48 @@ namespace api.Controllers
         {
             _dbContext = db;
         }
-
         [HttpGet("GetReservation/{id}")]
         public async Task<IActionResult> GetReservationById(int id)
         {
-            var reservation = await _dbContext.Reservation.FindAsync(id);
+            var reservation = await _dbContext.Reservation
+                .Include(r => r.Resident) // ✅ Incluye el User
+                .Include(r => r.Space)
+                    .ThenInclude(s => s.SpaceRule)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
             if (reservation == null)
                 return NotFound(new { success = false, message = "Reservation not found." });
 
-            return Ok(new { success = true, data = reservation });
+            var response = new
+            {
+                reservation.Id,
+                reservation.StartTime,
+                reservation.EndTime,
+                Resident = new
+                {
+                    reservation.Resident.Id,
+                    reservation.Resident.Email,
+                    reservation.Resident.Role,
+                    reservation.Resident.ResidentName,
+                    reservation.Resident.ApartmentInformation
+                },
+                Space = new
+                {
+                    reservation.Space.Id,
+                    reservation.Space.SpaceName,
+                    reservation.Space.Capacity,
+                    reservation.Space.Availability,
+                    Rule = reservation.Space.SpaceRule == null ? null : new
+                    {
+                        reservation.Space.SpaceRule.Id,
+                        reservation.Space.SpaceRule.Rule
+                    }
+                }
+            };
+
+            return Ok(new { response });
         }
+
 
         [HttpPost("CreateReservation")]
         public async Task<IActionResult> CreateReservation([FromBody] ReservationDto reservationDto)
