@@ -23,7 +23,7 @@ namespace api.Controllers
         }
 
         // GET api/reservation/user/5  => reservas por usuario
-        [HttpGet("{residentId}")]
+        [HttpGet("findReservationsByUser/{residentId}")]
         public async Task<IActionResult> findReservationsByUser(int residentId)
         {
             var userReservations = await _dbContext.Reservation
@@ -109,7 +109,7 @@ namespace api.Controllers
         }
 
         // GET api/reservation/5  => reserva por id
-        [HttpGet("{id}")]
+        [HttpGet("findReservationsById/{id}")]
         public async Task<IActionResult> findReservationsById(int id)
         {
             var reservation = await _dbContext.Reservation

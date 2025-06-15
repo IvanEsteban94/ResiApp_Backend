@@ -61,7 +61,7 @@ namespace api.Controllers
 
             return review;
         }
-        [HttpGet("{residentId}")]
+        [HttpGet("findReviewsByUser/{residentId}")]
         public async Task<IActionResult> findReviewsByUser(int residentId)
         {
             var reviews = await _context.Review
