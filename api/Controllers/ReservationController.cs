@@ -22,7 +22,7 @@ namespace api.Controllers
             _dbContext = db;
         }
         [HttpGet("GetReservationsByUser/{residentId}")]
-        public async Task<IActionResult> GetReservationsByUser(int residentId)
+        public async Task<IActionResult> ReservationsByUser(int residentId)
         {
             var userReservations = await _dbContext.Reservation
                 .Where(r => r.ResidentId == residentId)
@@ -67,7 +67,7 @@ namespace api.Controllers
         }
 
         [HttpGet("GetAllReservations")]
-        public async Task<IActionResult> GetAllReservations()
+        public async Task<IActionResult> AllReservations()
         {
             var reservations = await _dbContext.Reservation
                 .Include(r => r.Resident)
@@ -106,7 +106,7 @@ namespace api.Controllers
         }
 
         [HttpGet("GetReservation/{id}")]
-        public async Task<IActionResult> GetReservationById(int id)
+        public async Task<IActionResult> ReservationById(int id)
         {
             var reservation = await _dbContext.Reservation
                 .Include(r => r.Resident) // ✅ Incluye el User
@@ -149,7 +149,7 @@ namespace api.Controllers
 
 
         [HttpPost("CreateReservation")]
-        public async Task<IActionResult> CreateReservation([FromBody] ReservationDto reservationDto)
+        public async Task<IActionResult> Reservation([FromBody] ReservationDto reservationDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -179,11 +179,11 @@ namespace api.Controllers
             await _dbContext.Reservation.AddAsync(reservation);
             await _dbContext.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetReservationById), new { id = reservation.Id }, new { success = true, message = "Reservation created successfully." });
+            return CreatedAtAction(nameof(ReservationById), new { id = reservation.Id }, new { success = true, message = "Reservation created successfully." });
         }
 
         [HttpPut("UpdateReservation/{id}")]
-        public async Task<IActionResult> UpdateReservation(int id, [FromBody] Reservation updatedReservation)
+        public async Task<IActionResult> Reservation(int id, [FromBody] Reservation updatedReservation)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -219,7 +219,7 @@ namespace api.Controllers
 
         [HttpDelete("DeleteReservation/{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeleteReservation(int id)
+        public async Task<IActionResult> Reservation(int id)
         {
             var reservation = await _dbContext.Reservation.FindAsync(id);
             if (reservation == null)
