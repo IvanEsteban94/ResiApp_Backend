@@ -52,7 +52,7 @@ namespace api.Controllers
             return Ok(response);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("findReviewsById/{id}")]
         public async Task<ActionResult<Review>> findReviewsById(int id)
         {
             var review = await _context.Review.FindAsync(id);

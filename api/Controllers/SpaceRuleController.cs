@@ -47,7 +47,7 @@ namespace api.Controllers
         }
 
 
-        [HttpGet("{id}")]
+        [HttpGet("findSpaceRuleById/{id}")]
         public async Task<ActionResult<ReadSpaceRuleDto>> findSpaceRuleById(int id)
         {
             var rule = await _context.SpaceRule.FindAsync(id);

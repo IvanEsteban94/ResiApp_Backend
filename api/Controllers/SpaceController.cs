@@ -50,7 +50,7 @@ namespace api.Controllers
 
 
 
-        [HttpGet("{id}")]
+        [HttpGet("findSpacesById/{id}")]
         public async Task<ActionResult<SpaceDto>> findSpacesById(int id)
         {
             var space = await _context.Space
