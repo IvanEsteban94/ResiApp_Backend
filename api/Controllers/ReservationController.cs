@@ -13,11 +13,11 @@ namespace api.Controllers
 {
     [Route("/api/v1/[controller]")]
     [ApiController]
-    public class ReservationController : ControllerBase
+    public class ReservationsController : ControllerBase
     {
         private readonly ApplicationDbContext _dbContext;
 
-        public ReservationController(ApplicationDbContext db)
+        public ReservationsController(ApplicationDbContext db)
         {
             _dbContext = db;
         }
@@ -244,8 +244,8 @@ namespace api.Controllers
         }
 
         // GET api/reservation/available-slots?spaceId=1&date=2025-06-15&residentId=2&slotMinutes=60
-        [HttpGet("available-slots")]
-        public async Task<IActionResult> findAvailableSlots([FromQuery] int spaceId, [FromQuery] DateTime date, [FromQuery] int residentId, [FromQuery] int slotMinutes = 60)
+        [HttpGet("findReservationsByAvailableSlots")]
+        public async Task<IActionResult> findReservationsByAvailableSlots([FromQuery] int spaceId, [FromQuery] DateTime date, [FromQuery] int residentId, [FromQuery] int slotMinutes = 60)
         {
             var space = await _dbContext.Space.FirstOrDefaultAsync(s => s.Id == spaceId);
             if (space == null)

@@ -8,11 +8,11 @@ namespace api.Controllers
 {
     [ApiController]
     [Route("/api/v1/[controller]")]
-    public class ReviewController : ControllerBase
+    public class ReviewsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
 
-        public ReviewController(ApplicationDbContext context)
+        public ReviewsController(ApplicationDbContext context)
         {
             _context = context;
         }
@@ -108,7 +108,7 @@ namespace api.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Review(int id)
+        public async Task<IActionResult> Reviews(int id)
         {
             var review = await _context.Review.FindAsync(id);
             if (review == null)

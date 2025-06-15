@@ -8,17 +8,17 @@ namespace api.Controllers
 {
     [Route("/api/v1/[controller]")]
     [ApiController]
-    public class UserController : ControllerBase
+    public class UsersController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
 
-        public UserController(ApplicationDbContext db)
+        public UsersController(ApplicationDbContext db)
         {
             _db = db;
         }
 
         // GET api/user
-        [HttpGet("findUser/User")]
+        [HttpGet("findAllUsers/User")]
         public IActionResult findUser()
         {
             var users = _db.User.ToList();
@@ -41,7 +41,7 @@ namespace api.Controllers
         }
 
         // POST api/user
-        [HttpPost("User")]
+        [HttpPost]
         public IActionResult User([FromBody] UserCreateDto dto)
         {
             if (!ModelState.IsValid)

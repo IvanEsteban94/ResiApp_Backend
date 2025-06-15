@@ -9,11 +9,11 @@ namespace api.Controllers
 {
     [ApiController]
     [Route("/api/v1/[controller]")]
-    public class SpaceController : ControllerBase
+    public class SpacesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
 
-        public SpaceController(ApplicationDbContext context)
+        public SpacesController(ApplicationDbContext context)
         {
             _context = context;
         }
@@ -50,8 +50,8 @@ namespace api.Controllers
 
 
 
-        [HttpGet("FindSpaces/{id}")]
-        public async Task<ActionResult<SpaceDto>> FindSpaces(int id)
+        [HttpGet("findSpacesById/{id}")]
+        public async Task<ActionResult<SpaceDto>> findSpacesById(int id)
         {
             var space = await _context.Space
                 .Include(s => s.SpaceRule) // Asegura que SpaceRule se incluya
@@ -116,7 +116,7 @@ namespace api.Controllers
                 SpaceRules = new List<SpaceRule>() 
             };
 
-            return CreatedAtAction(nameof(FindSpaces), new { id = space.Id }, resultDto);
+            return CreatedAtAction(nameof(findSpacesById), new { id = space.Id }, resultDto);
         }
 
         // PUT: api/space/5

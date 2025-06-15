@@ -10,11 +10,11 @@ namespace api.Controllers
 {
     [ApiController]
     [Route("/api/v1/[controller]")]
-    public class SpaceRuleController : ControllerBase
+    public class SpaceRulesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
 
-        public SpaceRuleController(ApplicationDbContext context)
+        public SpaceRulesController(ApplicationDbContext context)
         {
             _context = context;
         }
@@ -47,8 +47,8 @@ namespace api.Controllers
         }
 
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ReadSpaceRuleDto>> SpaceRule(int id)
+        [HttpGet("findSpaceRuleById/{id}")]
+        public async Task<ActionResult<ReadSpaceRuleDto>> findSpaceRuleById(int id)
         {
             var rule = await _context.SpaceRule.FindAsync(id);
             if (rule == null) return NotFound();
