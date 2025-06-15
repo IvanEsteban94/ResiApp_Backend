@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using api.Models;
 using MyApi.Data;
 using api.Models.DTO;
+using api.Dtos;
 
 namespace api.Controllers
 {
@@ -61,6 +63,7 @@ namespace api.Controllers
 
             return review;
         }
+
         [HttpGet("findReviewsByUser/{residentId}")]
         public async Task<IActionResult> findReviewsByUser(int residentId)
         {
@@ -97,15 +100,46 @@ namespace api.Controllers
             return Ok(response);
         }
 
-
         [HttpPost]
-        public async Task<ActionResult<Review>> Reviews([FromBody] Review review)
+        public async Task<ActionResult<Review>> CreateReview([FromBody] CreateReviewDto dto)
         {
+            if (dto.ResidentId == 0)
+                return BadRequest("ResidentId no puede ser cero.");
+
+            var residentExists = await _context.User.AnyAsync(u => u.Id == dto.ResidentId);
+            if (!residentExists)
+                return BadRequest($"No se encontró un residente con ID {dto.ResidentId}");
+
+            if (dto.SpaceId == null || dto.SpaceId == 0)
+                return BadRequest("SpaceId no puede ser nulo o cero.");
+
+            var spaceExists = await _context.Space.AnyAsync(s => s.Id == dto.SpaceId.Value);
+            if (!spaceExists)
+                return BadRequest($"No se encontró un espacio con ID {dto.SpaceId.Value}");
+
+            var review = new Review
+            {
+                Rating = dto.Rating,
+                Comment = dto.Comment,
+                ResidentId = dto.ResidentId,
+                SpaceId = dto.SpaceId.Value
+            };
+
             _context.Review.Add(review);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(findReviewsById), new { id = review.Id }, review);
+            // Devuelve solo datos primitivos (sin objetos anidados)
+            return CreatedAtAction(nameof(findReviewsById), new { id = review.Id }, new
+            {
+                review.Id,
+                review.Rating,
+                review.Comment,
+                review.ResidentId,
+                review.SpaceId
+            });
         }
+
+
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Reviews(int id)
@@ -145,4 +179,3 @@ namespace api.Controllers
         }
     }
 }
-

@@ -55,10 +55,11 @@ namespace MyApi.Services
             return new LoginResponse
             {
                 Token = token,
-                Role = user.Role
+                Role = user.Role,
+                ResidentId = user.Id,
+                Resident = user.ResidentName
             };
         }
-
         public async Task<bool> ChangePasswordAsync(string email, string currentPassword, string newPassword)
         {
             var user = await _context.User.FirstOrDefaultAsync(u => u.Email == email);

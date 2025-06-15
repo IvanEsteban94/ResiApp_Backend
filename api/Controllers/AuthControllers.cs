@@ -45,7 +45,7 @@ namespace MyApi.Controllers
             if (response == null)
                 return Unauthorized("Invalid credentials.");
 
-            return Ok(new { token = response.Token, role = response.Role });
+            return Ok(new { token = response.Token, role = response.Role, residentId = response.ResidentId, resident = response.Resident });
         }
 
         [HttpPost("change-password")]
