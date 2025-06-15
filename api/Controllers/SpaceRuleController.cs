@@ -20,7 +20,7 @@ namespace api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateSpaceRules([FromBody] CreateSpaceRuleDto dto)
+        public async Task<IActionResult> SpaceRule([FromBody] CreateSpaceRuleDto dto)
         {
             var rule = new SpaceRule
             {
@@ -43,12 +43,12 @@ namespace api.Controllers
                 Rule = rule.Rule
             };
 
-            return CreatedAtAction(nameof(ReadSpaceRules), new { id = rule.Id }, result);
+            return CreatedAtAction(nameof(SpaceRule), new { id = rule.Id }, result);
         }
 
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<ReadSpaceRuleDto>> ReadSpaceRules(int id)
+        public async Task<ActionResult<ReadSpaceRuleDto>> SpaceRule(int id)
         {
             var rule = await _context.SpaceRule.FindAsync(id);
             if (rule == null) return NotFound();
@@ -63,12 +63,13 @@ namespace api.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateSpaceRules(int id, [FromBody] UpdateSpaceRuleDto dto)
+        public async Task<IActionResult> ModifySpaceRule(int id, [FromBody] UpdateSpaceRuleDto dto)
         {
             var rule = await _context.SpaceRule.FindAsync(id);
-            if (rule == null) return NotFound();
+            if (rule == null)
+                return NotFound(new { success = false, message = "Space rule not found." });
 
-            if (!string.IsNullOrEmpty(dto.Rule))
+            if (!string.IsNullOrWhiteSpace(dto.Rule))
                 rule.Rule = dto.Rule;
 
             await _context.SaveChangesAsync();
@@ -83,7 +84,7 @@ namespace api.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSpaceRules(int id)
+        public async Task<IActionResult> RemoveSpaceRule(int id)
         {
             var rule = await _context.SpaceRule.FindAsync(id);
             if (rule == null)
@@ -92,11 +93,11 @@ namespace api.Controllers
             _context.SpaceRule.Remove(rule);
             await _context.SaveChangesAsync();
 
-            return Ok(new { success = true, message = "Space rule deleted successfully." });
+            return Ok(new { success = true, message = "Space rule removed successfully." });
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ReadSpaceRuleDto>>> GetAllSpaceRules()
+        public async Task<ActionResult<IEnumerable<ReadSpaceRuleDto>>> FindAllSpaceRule()
         {
             var rules = await _context.SpaceRule.ToListAsync();
 

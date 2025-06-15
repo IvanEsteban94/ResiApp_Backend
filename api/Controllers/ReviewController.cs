@@ -17,8 +17,8 @@ namespace api.Controllers
             _context = context;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
+        [HttpGet("findAllReviews")]
+        public async Task<IActionResult> findReviewsAll()
         {
             var reviews = await _context.Review
                 .Include(r => r.Resident)
@@ -52,8 +52,8 @@ namespace api.Controllers
             return Ok(response);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Review>> GetById(int id)
+        [HttpGet("findReviewsById/{id}")]
+        public async Task<ActionResult<Review>> findReviewsById(int id)
         {
             var review = await _context.Review.FindAsync(id);
             if (review == null)
@@ -61,7 +61,7 @@ namespace api.Controllers
 
             return review;
         }
-        [HttpGet("residents/{residentId}")]
+        [HttpGet("findReviewsByUser/{residentId}")]
         public async Task<IActionResult> findReviewsByUser(int residentId)
         {
             var reviews = await _context.Review
@@ -99,16 +99,16 @@ namespace api.Controllers
 
 
         [HttpPost]
-        public async Task<ActionResult<Review>> CreateReviews([FromBody] Review review)
+        public async Task<ActionResult<Review>> Reviews([FromBody] Review review)
         {
             _context.Review.Add(review);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetById), new { id = review.Id }, review);
+            return CreatedAtAction(nameof(findReviewsById), new { id = review.Id }, review);
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteReviews(int id)
+        public async Task<IActionResult> Reviews(int id)
         {
             var review = await _context.Review.FindAsync(id);
             if (review == null)
@@ -121,7 +121,7 @@ namespace api.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateReviews(int id, [FromBody] UpdateReviewDto dto)
+        public async Task<IActionResult> Reviews(int id, [FromBody] UpdateReviewDto dto)
         {
             var existingReview = await _context.Review.FindAsync(id);
             if (existingReview == null)

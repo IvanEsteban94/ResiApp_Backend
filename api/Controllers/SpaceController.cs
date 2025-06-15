@@ -20,7 +20,7 @@ namespace api.Controllers
 
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<SpaceDto>>> GetAllSpaces()
+        public async Task<ActionResult<IEnumerable<SpaceDto>>> FindAllSpaces()
         {
             var spaces = await _context.Space
                 .Include(s => s.SpaceRule)  // Asegúrate que la entidad Space tiene la propiedad de navegación SpaceRule
@@ -51,7 +51,7 @@ namespace api.Controllers
 
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<SpaceDto>> GetSpaces(int id)
+        public async Task<ActionResult<SpaceDto>> FindSpace(int id)
         {
             var space = await _context.Space
                 .Include(s => s.SpaceRule) // Asegura que SpaceRule se incluya
@@ -83,7 +83,7 @@ namespace api.Controllers
 
         // POST: api/space
         [HttpPost]
-        public async Task<ActionResult<SpaceDto>> CreateSpaces(CreateSpaceDto dto)
+        public async Task<ActionResult<SpaceDto>> Space(CreateSpaceDto dto)
         {
             if (dto.SpaceRuleId == null || dto.SpaceRuleId == 0)
             {
@@ -116,12 +116,12 @@ namespace api.Controllers
                 SpaceRules = new List<SpaceRule>() 
             };
 
-            return CreatedAtAction(nameof(GetSpaces), new { id = space.Id }, resultDto);
+            return CreatedAtAction(nameof(FindSpace), new { id = space.Id }, resultDto);
         }
 
         // PUT: api/space/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateSpaces(int id, CreateSpaceDto dto)
+        public async Task<IActionResult> Space(int id, CreateSpaceDto dto)
         {
             var space = await _context.Space.FindAsync(id);
             if (space == null) return NotFound();
@@ -149,7 +149,7 @@ namespace api.Controllers
 
         // DELETE: api/space/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSpaces(int id)
+        public async Task<IActionResult> Space(int id)
         {
             var space = await _context.Space.FindAsync(id);
             if (space == null) return NotFound();

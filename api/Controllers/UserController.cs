@@ -18,8 +18,8 @@ namespace api.Controllers
         }
 
         // GET api/user
-        [HttpGet("Users")]
-        public IActionResult GetUsers()
+        [HttpGet("User")]
+        public IActionResult findUser()
         {
             var users = _db.User.ToList();
 
@@ -31,7 +31,7 @@ namespace api.Controllers
 
         // GET api/user/5
         [HttpGet("{id}")]
-        public IActionResult GetUserById(int id)
+        public IActionResult findUserById(int id)
         {
             var user = _db.User.FirstOrDefault(u => u.Id == id);
             if (user == null)
@@ -41,8 +41,8 @@ namespace api.Controllers
         }
 
         // POST api/user
-        [HttpPost("Users")]
-        public IActionResult CreateUsers([FromBody] UserCreateDto dto)
+        [HttpPost("User")]
+        public IActionResult User([FromBody] UserCreateDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -62,11 +62,11 @@ namespace api.Controllers
             _db.User.Add(user);
             _db.SaveChanges();
 
-            return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, new { success = true, id = user.Id, message = "User created successfully." });
+            return CreatedAtAction(nameof(findUserById), new { id = user.Id }, new { success = true, id = user.Id, message = "User created successfully." });
         }
         // PUT api/user/5
         [HttpPut("{id}")]
-        public IActionResult UpdateUsers(int id, [FromBody] UserCreateDto dto)
+        public IActionResult User(int id, [FromBody] UserCreateDto dto)
         {
             var user = _db.User.FirstOrDefault(u => u.Id == id);
             if (user == null)
@@ -102,7 +102,7 @@ namespace api.Controllers
 
         // DELETE api/user/5
         [HttpDelete("{id}")]
-        public IActionResult DeleteUsers(int id)
+        public IActionResult User(int id)
         {
             var user = _db.User.FirstOrDefault(u => u.Id == id);
             if (user == null)
