@@ -19,8 +19,8 @@ namespace api.Controllers
         }
 
 
-        [HttpGet("FindAllSpaces")]
-        public async Task<ActionResult<IEnumerable<SpaceDto>>> FindAllSpaces()
+        [HttpGet("FindSpaces")]
+        public async Task<ActionResult<IEnumerable<SpaceDto>>> FindSpaces()
         {
             var spaces = await _context.Space
                 .Include(s => s.SpaceRule)  // Asegúrate que la entidad Space tiene la propiedad de navegación SpaceRule

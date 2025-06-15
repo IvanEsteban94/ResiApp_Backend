@@ -69,8 +69,8 @@ namespace api.Controllers
         }
 
         // GET api/reservation  => todas las reservas
-        [HttpGet("findAllReservations")]
-        public async Task<IActionResult> findAllReservations()
+        [HttpGet("findReservations")]
+        public async Task<IActionResult> findReservations()
         {
             var reservations = await _dbContext.Reservation
                 .Include(r => r.Resident)

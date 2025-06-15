@@ -97,7 +97,7 @@ namespace api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ReadSpaceRuleDto>>> FindAllSpaceRule()
+        public async Task<ActionResult<IEnumerable<ReadSpaceRuleDto>>> FindSpaceRule()
         {
             var rules = await _context.SpaceRule.ToListAsync();
 

@@ -18,7 +18,7 @@ namespace api.Controllers
         }
 
         // GET api/user
-        [HttpGet("findAllUsers/User")]
+        [HttpGet("findUsers/User")]
         public IActionResult findUser()
         {
             var users = _db.User.ToList();

@@ -17,8 +17,8 @@ namespace api.Controllers
             _context = context;
         }
 
-        [HttpGet("findAllReviews")]
-        public async Task<IActionResult> findAllReviews()
+        [HttpGet("findReviews")]
+        public async Task<IActionResult> findReviews()
         {
             var reviews = await _context.Review
                 .Include(r => r.Resident)
