@@ -21,7 +21,9 @@ namespace api.Controllers
         {
             _dbContext = db;
         }
-        [HttpGet("ReservationsByUser/{residentId}")]
+
+        // GET api/reservation/user/5  => reservas por usuario
+        [HttpGet("user/{residentId}")]
         public async Task<IActionResult> ReservationsByUser(int residentId)
         {
             var userReservations = await _dbContext.Reservation
@@ -66,7 +68,8 @@ namespace api.Controllers
             return Ok(new { success = true, data = response });
         }
 
-        [HttpGet("AllReservations")]
+        // GET api/reservation  => todas las reservas
+        [HttpGet]
         public async Task<IActionResult> AllReservations()
         {
             var reservations = await _dbContext.Reservation
@@ -105,11 +108,12 @@ namespace api.Controllers
             return Ok(new { success = true, data = response });
         }
 
-        [HttpGet("Reservation/{id}")]
+        // GET api/reservation/5  => reserva por id
+        [HttpGet("{id}")]
         public async Task<IActionResult> ReservationById(int id)
         {
             var reservation = await _dbContext.Reservation
-                .Include(r => r.Resident) // ✅ Incluye el User
+                .Include(r => r.Resident) // Incluye el Resident
                 .Include(r => r.Space)
                     .ThenInclude(s => s.SpaceRule)
                 .FirstOrDefaultAsync(r => r.Id == id);
@@ -144,15 +148,18 @@ namespace api.Controllers
                 }
             };
 
-            return Ok(new { response });
+            return Ok(new { success = true, data = response });
         }
 
-
-        [HttpPost("Reservation")]
+        // POST api/reservation  => crear reserva
+        [HttpPost]
         public async Task<IActionResult> Reservation([FromBody] ReservationDto reservationDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
+
+            if (reservationDto.EndTime <= reservationDto.StartTime)
+                return BadRequest(new { success = false, message = "EndTime must be after StartTime." });
 
             var space = await _dbContext.Space.FirstOrDefaultAsync(s => s.Id == reservationDto.SpaceId);
             if (space == null)
@@ -182,11 +189,15 @@ namespace api.Controllers
             return CreatedAtAction(nameof(ReservationById), new { id = reservation.Id }, new { success = true, message = "Reservation created successfully." });
         }
 
-        [HttpPut("Reservation/{id}")]
+        // PUT api/reservation/5  => actualizar reserva
+        [HttpPut("{id}")]
         public async Task<IActionResult> Reservation(int id, [FromBody] Reservation updatedReservation)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
+
+            if (updatedReservation.EndTime <= updatedReservation.StartTime)
+                return BadRequest(new { success = false, message = "EndTime must be after StartTime." });
 
             var reservation = await _dbContext.Reservation.FirstOrDefaultAsync(r => r.Id == id);
             if (reservation == null)
@@ -217,7 +228,8 @@ namespace api.Controllers
             return Ok(new { success = true, message = "Reservation updated successfully." });
         }
 
-        [HttpDelete("Reservation/{id}")]
+        // DELETE api/reservation/5  => eliminar reserva (solo admin)
+        [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Reservation(int id)
         {
@@ -231,7 +243,8 @@ namespace api.Controllers
             return Ok(new { success = true, message = "Reservation deleted successfully." });
         }
 
-        [HttpGet("GetAvailableSlots")]
+        // GET api/reservation/available-slots?spaceId=1&date=2025-06-15&residentId=2&slotMinutes=60
+        [HttpGet("available-slots")]
         public async Task<IActionResult> GetAvailableSlots([FromQuery] int spaceId, [FromQuery] DateTime date, [FromQuery] int residentId, [FromQuery] int slotMinutes = 60)
         {
             var space = await _dbContext.Space.FirstOrDefaultAsync(s => s.Id == spaceId);
@@ -266,12 +279,12 @@ namespace api.Controllers
                 {
                     availableSlots.Add(new
                     {
-                        SpaceName = space.SpaceName,
-                        TimeRange = $"{currentStart:hh\\:mm tt} to {currentEnd:hh\\:mm tt}"
+                        StartTime = currentStart.ToString("yyyy-MM-ddTHH:mm:ss"),
+                        EndTime = currentEnd.ToString("yyyy-MM-ddTHH:mm:ss")
                     });
                 }
 
-                currentStart = currentEnd;
+                currentStart = currentStart.AddMinutes(slotMinutes);
             }
 
             return Ok(new { success = true, data = availableSlots });
