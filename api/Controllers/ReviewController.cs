@@ -18,7 +18,7 @@ namespace api.Controllers
         }
 
         [HttpGet("findAllReviews")]
-        public async Task<IActionResult> findReviewsAll()
+        public async Task<IActionResult> findAllReviews()
         {
             var reviews = await _context.Review
                 .Include(r => r.Resident)
@@ -108,7 +108,7 @@ namespace api.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Reviews(int id)
+        public async Task<IActionResult> Review(int id)
         {
             var review = await _context.Review.FindAsync(id);
             if (review == null)

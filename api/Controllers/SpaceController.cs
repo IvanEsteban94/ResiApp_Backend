@@ -19,7 +19,7 @@ namespace api.Controllers
         }
 
 
-        [HttpGet]
+        [HttpGet("FindAllSpaces")]
         public async Task<ActionResult<IEnumerable<SpaceDto>>> FindAllSpaces()
         {
             var spaces = await _context.Space
@@ -50,8 +50,8 @@ namespace api.Controllers
 
 
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<SpaceDto>> FindSpace(int id)
+        [HttpGet("FindSpaces/{id}")]
+        public async Task<ActionResult<SpaceDto>> FindSpaces(int id)
         {
             var space = await _context.Space
                 .Include(s => s.SpaceRule) // Asegura que SpaceRule se incluya
@@ -83,7 +83,7 @@ namespace api.Controllers
 
         // POST: api/space
         [HttpPost]
-        public async Task<ActionResult<SpaceDto>> Space(CreateSpaceDto dto)
+        public async Task<ActionResult<SpaceDto>> Spaces(CreateSpaceDto dto)
         {
             if (dto.SpaceRuleId == null || dto.SpaceRuleId == 0)
             {
@@ -116,12 +116,12 @@ namespace api.Controllers
                 SpaceRules = new List<SpaceRule>() 
             };
 
-            return CreatedAtAction(nameof(FindSpace), new { id = space.Id }, resultDto);
+            return CreatedAtAction(nameof(FindSpaces), new { id = space.Id }, resultDto);
         }
 
         // PUT: api/space/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Space(int id, CreateSpaceDto dto)
+        public async Task<IActionResult> Spaces(int id, CreateSpaceDto dto)
         {
             var space = await _context.Space.FindAsync(id);
             if (space == null) return NotFound();
@@ -149,7 +149,7 @@ namespace api.Controllers
 
         // DELETE: api/space/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Space(int id)
+        public async Task<IActionResult> Spaces(int id)
         {
             var space = await _context.Space.FindAsync(id);
             if (space == null) return NotFound();
