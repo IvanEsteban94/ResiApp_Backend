@@ -23,7 +23,6 @@ namespace api.Controllers
             return await _context.Review.ToListAsync();
         }
 
-
         [HttpGet("{id}")]
         public async Task<ActionResult<Review>> GetById(int id)
         {
@@ -34,7 +33,20 @@ namespace api.Controllers
             return review;
         }
 
- 
+        // 🔹 NUEVO MÉTODO: Obtener reviews por ResidentId
+        [HttpGet("resident/{residentId}")]
+        public async Task<ActionResult<IEnumerable<Review>>> GetReviewsByResident(int residentId)
+        {
+            var reviews = await _context.Review
+                .Where(r => r.ResidentId == residentId)
+                .ToListAsync();
+
+            if (reviews == null || reviews.Count == 0)
+                return NotFound($"No se encontraron reseñas para el residente con ID {residentId}");
+
+            return Ok(reviews);
+        }
+
         [HttpPost]
         public async Task<ActionResult<Review>> CreateReview([FromBody] Review review)
         {
@@ -44,9 +56,6 @@ namespace api.Controllers
             return CreatedAtAction(nameof(GetById), new { id = review.Id }, review);
         }
 
-       
-
-       
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteReview(int id)
         {
@@ -59,6 +68,7 @@ namespace api.Controllers
 
             return NoContent();
         }
+
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateReview(int id, [FromBody] UpdateReviewDto dto)
         {
@@ -84,3 +94,4 @@ namespace api.Controllers
         }
     }
 }
+
