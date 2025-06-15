@@ -32,20 +32,42 @@ namespace api.Controllers
 
             return review;
         }
-
-        // 🔹 NUEVO MÉTODO: Obtener reviews por ResidentId
         [HttpGet("resident/{residentId}")]
-        public async Task<ActionResult<IEnumerable<Review>>> GetReviewsByResident(int residentId)
+        public async Task<IActionResult> GetReviewsByResident(int residentId)
         {
             var reviews = await _context.Review
+                .Include(r => r.Resident)
+                .Include(r => r.Space)
                 .Where(r => r.ResidentId == residentId)
                 .ToListAsync();
 
             if (reviews == null || reviews.Count == 0)
                 return NotFound($"No se encontraron reseñas para el residente con ID {residentId}");
 
-            return Ok(reviews);
+            var response = reviews.Select(r => new
+            {
+                r.Id,
+                r.Rating,
+                r.Comment,
+                Resident = new
+                {
+                    r.Resident.Id,
+                    r.Resident.ResidentName,
+                    r.Resident.Email,
+                    r.Resident.ApartmentInformation
+                },
+                Space = r.Space == null ? null : new
+                {
+                    r.Space.Id,
+                    r.Space.SpaceName,
+                    r.Space.Capacity,
+                    r.Space.Availability
+                }
+            });
+
+            return Ok(response);
         }
+
 
         [HttpPost]
         public async Task<ActionResult<Review>> CreateReview([FromBody] Review review)
