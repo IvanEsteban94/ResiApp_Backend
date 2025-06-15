@@ -8,7 +8,7 @@ using MyApi.Data;
 namespace api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("/api/v1/[controller]")]
     public class SpaceController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -51,7 +51,7 @@ namespace api.Controllers
 
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<SpaceDto>> GetSpace(int id)
+        public async Task<ActionResult<SpaceDto>> GetSpaces(int id)
         {
             var space = await _context.Space
                 .Include(s => s.SpaceRule) // Asegura que SpaceRule se incluya
@@ -83,7 +83,7 @@ namespace api.Controllers
 
         // POST: api/space
         [HttpPost]
-        public async Task<ActionResult<SpaceDto>> CreateSpace(CreateSpaceDto dto)
+        public async Task<ActionResult<SpaceDto>> CreateSpaces(CreateSpaceDto dto)
         {
             if (dto.SpaceRuleId == null || dto.SpaceRuleId == 0)
             {
@@ -116,12 +116,12 @@ namespace api.Controllers
                 SpaceRules = new List<SpaceRule>() 
             };
 
-            return CreatedAtAction(nameof(GetSpace), new { id = space.Id }, resultDto);
+            return CreatedAtAction(nameof(GetSpaces), new { id = space.Id }, resultDto);
         }
 
         // PUT: api/space/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateSpace(int id, CreateSpaceDto dto)
+        public async Task<IActionResult> UpdateSpaces(int id, CreateSpaceDto dto)
         {
             var space = await _context.Space.FindAsync(id);
             if (space == null) return NotFound();
@@ -149,7 +149,7 @@ namespace api.Controllers
 
         // DELETE: api/space/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSpace(int id)
+        public async Task<IActionResult> DeleteSpaces(int id)
         {
             var space = await _context.Space.FindAsync(id);
             if (space == null) return NotFound();

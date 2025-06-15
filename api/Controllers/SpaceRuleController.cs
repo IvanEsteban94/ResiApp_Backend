@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("/api/v1/[controller]")]
     public class SpaceRuleController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -20,7 +20,7 @@ namespace api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateSpaceRule([FromBody] CreateSpaceRuleDto dto)
+        public async Task<IActionResult> CreateSpaceRules([FromBody] CreateSpaceRuleDto dto)
         {
             var rule = new SpaceRule
             {
@@ -43,12 +43,12 @@ namespace api.Controllers
                 Rule = rule.Rule
             };
 
-            return CreatedAtAction(nameof(ReadSpaceRule), new { id = rule.Id }, result);
+            return CreatedAtAction(nameof(ReadSpaceRules), new { id = rule.Id }, result);
         }
 
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<ReadSpaceRuleDto>> ReadSpaceRule(int id)
+        public async Task<ActionResult<ReadSpaceRuleDto>> ReadSpaceRules(int id)
         {
             var rule = await _context.SpaceRule.FindAsync(id);
             if (rule == null) return NotFound();
@@ -63,7 +63,7 @@ namespace api.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateSpaceRule(int id, [FromBody] UpdateSpaceRuleDto dto)
+        public async Task<IActionResult> UpdateSpaceRules(int id, [FromBody] UpdateSpaceRuleDto dto)
         {
             var rule = await _context.SpaceRule.FindAsync(id);
             if (rule == null) return NotFound();
@@ -83,7 +83,7 @@ namespace api.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSpaceRule(int id)
+        public async Task<IActionResult> DeleteSpaceRules(int id)
         {
             var rule = await _context.SpaceRule.FindAsync(id);
             if (rule == null)

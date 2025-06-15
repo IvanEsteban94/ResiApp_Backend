@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("/api/v1/[controller]")]
     [ApiController]
     public class ReservationController : ControllerBase
     {
@@ -23,8 +23,8 @@ namespace api.Controllers
         }
 
         // GET api/reservation/user/5  => reservas por usuario
-        [HttpGet("user/{residentId}")]
-        public async Task<IActionResult> ReservationsByUser(int residentId)
+        [HttpGet("users/{residentId}")]
+        public async Task<IActionResult> findReservationsByUser(int residentId)
         {
             var userReservations = await _dbContext.Reservation
                 .Where(r => r.ResidentId == residentId)
@@ -70,7 +70,7 @@ namespace api.Controllers
 
         // GET api/reservation  => todas las reservas
         [HttpGet]
-        public async Task<IActionResult> AllReservations()
+        public async Task<IActionResult> findAllReservations()
         {
             var reservations = await _dbContext.Reservation
                 .Include(r => r.Resident)
@@ -110,7 +110,7 @@ namespace api.Controllers
 
         // GET api/reservation/5  => reserva por id
         [HttpGet("{id}")]
-        public async Task<IActionResult> ReservationById(int id)
+        public async Task<IActionResult> findReservationsById(int id)
         {
             var reservation = await _dbContext.Reservation
                 .Include(r => r.Resident) // Incluye el Resident
@@ -153,7 +153,7 @@ namespace api.Controllers
 
         // POST api/reservation  => crear reserva
         [HttpPost]
-        public async Task<IActionResult> Reservation([FromBody] ReservationDto reservationDto)
+        public async Task<IActionResult> Reservations([FromBody] ReservationDto reservationDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -186,12 +186,12 @@ namespace api.Controllers
             await _dbContext.Reservation.AddAsync(reservation);
             await _dbContext.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(ReservationById), new { id = reservation.Id }, new { success = true, message = "Reservation created successfully." });
+            return CreatedAtAction(nameof(findReservationsById), new { id = reservation.Id }, new { success = true, message = "Reservation created successfully." });
         }
 
         // PUT api/reservation/5  => actualizar reserva
         [HttpPut("{id}")]
-        public async Task<IActionResult> Reservation(int id, [FromBody] Reservation updatedReservation)
+        public async Task<IActionResult> Reservations(int id, [FromBody] Reservation updatedReservation)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -231,7 +231,7 @@ namespace api.Controllers
         // DELETE api/reservation/5  => eliminar reserva (solo admin)
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Reservation(int id)
+        public async Task<IActionResult> Reservations(int id)
         {
             var reservation = await _dbContext.Reservation.FindAsync(id);
             if (reservation == null)
@@ -245,7 +245,7 @@ namespace api.Controllers
 
         // GET api/reservation/available-slots?spaceId=1&date=2025-06-15&residentId=2&slotMinutes=60
         [HttpGet("available-slots")]
-        public async Task<IActionResult> GetAvailableSlots([FromQuery] int spaceId, [FromQuery] DateTime date, [FromQuery] int residentId, [FromQuery] int slotMinutes = 60)
+        public async Task<IActionResult> findAvailableSlots([FromQuery] int spaceId, [FromQuery] DateTime date, [FromQuery] int residentId, [FromQuery] int slotMinutes = 60)
         {
             var space = await _dbContext.Space.FirstOrDefaultAsync(s => s.Id == spaceId);
             if (space == null)

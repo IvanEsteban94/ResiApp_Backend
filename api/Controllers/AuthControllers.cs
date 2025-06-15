@@ -8,7 +8,7 @@ using System.Security.Claims;
 namespace MyApi.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("/api/v1/[controller]")]
     public class AuthController : ControllerBase
     {
         private readonly AuthService _auth;

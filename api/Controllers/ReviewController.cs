@@ -7,7 +7,7 @@ using api.Models.DTO;
 namespace api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("/api/v1/[controller]")]
     public class ReviewController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -61,8 +61,8 @@ namespace api.Controllers
 
             return review;
         }
-        [HttpGet("resident/{residentId}")]
-        public async Task<IActionResult> GetReviewsByResident(int residentId)
+        [HttpGet("residents/{residentId}")]
+        public async Task<IActionResult> findReviewsByUser(int residentId)
         {
             var reviews = await _context.Review
                 .Include(r => r.Resident)
@@ -99,7 +99,7 @@ namespace api.Controllers
 
 
         [HttpPost]
-        public async Task<ActionResult<Review>> CreateReview([FromBody] Review review)
+        public async Task<ActionResult<Review>> CreateReviews([FromBody] Review review)
         {
             _context.Review.Add(review);
             await _context.SaveChangesAsync();
@@ -108,7 +108,7 @@ namespace api.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteReview(int id)
+        public async Task<IActionResult> DeleteReviews(int id)
         {
             var review = await _context.Review.FindAsync(id);
             if (review == null)
@@ -121,7 +121,7 @@ namespace api.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateReview(int id, [FromBody] UpdateReviewDto dto)
+        public async Task<IActionResult> UpdateReviews(int id, [FromBody] UpdateReviewDto dto)
         {
             var existingReview = await _context.Review.FindAsync(id);
             if (existingReview == null)

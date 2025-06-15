@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("/api/v1/[controller]")]
     [ApiController]
     public class UserController : ControllerBase
     {
@@ -18,7 +18,7 @@ namespace api.Controllers
         }
 
         // GET api/user
-        [HttpGet("User")]
+        [HttpGet("Users")]
         public IActionResult GetUsers()
         {
             var users = _db.User.ToList();
@@ -41,8 +41,8 @@ namespace api.Controllers
         }
 
         // POST api/user
-        [HttpPost("User")]
-        public IActionResult CreateUser([FromBody] UserCreateDto dto)
+        [HttpPost("Users")]
+        public IActionResult CreateUsers([FromBody] UserCreateDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -66,7 +66,7 @@ namespace api.Controllers
         }
         // PUT api/user/5
         [HttpPut("{id}")]
-        public IActionResult UpdateUser(int id, [FromBody] UserCreateDto dto)
+        public IActionResult UpdateUsers(int id, [FromBody] UserCreateDto dto)
         {
             var user = _db.User.FirstOrDefault(u => u.Id == id);
             if (user == null)
@@ -102,7 +102,7 @@ namespace api.Controllers
 
         // DELETE api/user/5
         [HttpDelete("{id}")]
-        public IActionResult DeleteUser(int id)
+        public IActionResult DeleteUsers(int id)
         {
             var user = _db.User.FirstOrDefault(u => u.Id == id);
             if (user == null)
