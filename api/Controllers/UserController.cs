@@ -18,7 +18,7 @@ namespace api.Controllers
         }
 
         // GET api/user
-        [HttpGet("findUsers/User")]
+        [HttpGet]
         public IActionResult findUser()
         {
             var users = _db.User.ToList();
@@ -30,7 +30,7 @@ namespace api.Controllers
         }
 
         // GET api/user/5
-        [HttpGet("findUserById/{id}")]
+        [HttpGet("{id}")]
         public IActionResult findUserById(int id)
         {
             var user = _db.User.FirstOrDefault(u => u.Id == id);

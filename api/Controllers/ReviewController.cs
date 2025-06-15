@@ -17,7 +17,7 @@ namespace api.Controllers
             _context = context;
         }
 
-        [HttpGet("findReviews")]
+        [HttpGet]
         public async Task<IActionResult> findReviews()
         {
             var reviews = await _context.Review
@@ -52,7 +52,7 @@ namespace api.Controllers
             return Ok(response);
         }
 
-        [HttpGet("findReviewsById/{id}")]
+        [HttpGet("{id}")]
         public async Task<ActionResult<Review>> findReviewsById(int id)
         {
             var review = await _context.Review.FindAsync(id);
@@ -61,7 +61,7 @@ namespace api.Controllers
 
             return review;
         }
-        [HttpGet("findReviewsByUser/{residentId}")]
+        [HttpGet("{residentId}")]
         public async Task<IActionResult> findReviewsByUser(int residentId)
         {
             var reviews = await _context.Review
