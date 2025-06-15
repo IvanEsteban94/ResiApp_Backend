@@ -18,9 +18,38 @@ namespace api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Review>>> GetAll()
+        public async Task<IActionResult> GetAll()
         {
-            return await _context.Review.ToListAsync();
+            var reviews = await _context.Review
+                .Include(r => r.Resident)
+                .Include(r => r.Space)
+                .ToListAsync();
+
+            if (reviews == null || reviews.Count == 0)
+                return NotFound("No se encontraron reseñas.");
+
+            var response = reviews.Select(r => new
+            {
+                r.Id,
+                r.Rating,
+                r.Comment,
+                Resident = new
+                {
+                    r.Resident.Id,
+                    r.Resident.ResidentName,
+                    r.Resident.Email,
+                    r.Resident.ApartmentInformation
+                },
+                Space = r.Space == null ? null : new
+                {
+                    r.Space.Id,
+                    r.Space.SpaceName,
+                    r.Space.Capacity,
+                    r.Space.Availability
+                }
+            });
+
+            return Ok(response);
         }
 
         [HttpGet("{id}")]
