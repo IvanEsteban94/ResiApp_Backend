@@ -21,7 +21,7 @@ namespace api.Controllers
         {
             _dbContext = db;
         }
-        [HttpGet("GetReservationsByUser/{residentId}")]
+        [HttpGet("ReservationsByUser/{residentId}")]
         public async Task<IActionResult> ReservationsByUser(int residentId)
         {
             var userReservations = await _dbContext.Reservation
@@ -66,7 +66,7 @@ namespace api.Controllers
             return Ok(new { success = true, data = response });
         }
 
-        [HttpGet("GetAllReservations")]
+        [HttpGet("AllReservations")]
         public async Task<IActionResult> AllReservations()
         {
             var reservations = await _dbContext.Reservation
@@ -105,7 +105,7 @@ namespace api.Controllers
             return Ok(new { success = true, data = response });
         }
 
-        [HttpGet("GetReservation/{id}")]
+        [HttpGet("Reservation/{id}")]
         public async Task<IActionResult> ReservationById(int id)
         {
             var reservation = await _dbContext.Reservation
@@ -148,7 +148,7 @@ namespace api.Controllers
         }
 
 
-        [HttpPost("CreateReservation")]
+        [HttpPost("Reservation")]
         public async Task<IActionResult> Reservation([FromBody] ReservationDto reservationDto)
         {
             if (!ModelState.IsValid)
@@ -182,7 +182,7 @@ namespace api.Controllers
             return CreatedAtAction(nameof(ReservationById), new { id = reservation.Id }, new { success = true, message = "Reservation created successfully." });
         }
 
-        [HttpPut("UpdateReservation/{id}")]
+        [HttpPut("Reservation/{id}")]
         public async Task<IActionResult> Reservation(int id, [FromBody] Reservation updatedReservation)
         {
             if (!ModelState.IsValid)
@@ -217,7 +217,7 @@ namespace api.Controllers
             return Ok(new { success = true, message = "Reservation updated successfully." });
         }
 
-        [HttpDelete("DeleteReservation/{id}")]
+        [HttpDelete("Reservation/{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Reservation(int id)
         {
