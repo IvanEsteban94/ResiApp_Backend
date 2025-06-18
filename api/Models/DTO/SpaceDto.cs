@@ -6,11 +6,11 @@ namespace api.Dtos
     public class SpaceDto
     {
         public int Id { get; set; }
-        public string SpaceName { get; set; } = string.Empty;
+        public string SpaceName { get; set; }
         public int Capacity { get; set; }
         public bool Availability { get; set; }
+        public List<SpaceRule> SpaceRules { get; set; }
 
-        // Lista de reglas
-        public List<SpaceRule> SpaceRules { get; set; } = new();
+        public string? ImageBase64 { get; set; } 
     }
 }

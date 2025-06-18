@@ -4,15 +4,16 @@ namespace api.Models.DTO
 {
     public class ChangePasswordRequest
     {
-        [Required]
-        [EmailAddress]
-        public string Email { get; set; } = string.Empty;
+        [Required, EmailAddress]
+        public string Email { get; set; } = null!;
 
         [Required]
-        public string CurrentPassword { get; set; } = string.Empty;
+        public string CurrentPassword { get; set; } = null!;
 
         [Required]
-        [MinLength(6)]
-        public string NewPassword { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = null!;
+
+        [Required]
+        public string SecurityWord { get; set; } = null!;
     }
 }

@@ -12,8 +12,8 @@ using MyApi.Data;
 namespace api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250518185054_UpdateReservationModel")]
-    partial class UpdateReservationModel
+    [Migration("20250617100949_AddImageBase64ToSpace")]
+    partial class AddImageBase64ToSpace
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -78,6 +78,8 @@ namespace api.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ResidentId");
+
                     b.HasIndex("SpaceId");
 
                     b.ToTable("Reservation");
@@ -101,7 +103,14 @@ namespace api.Migrations
                     b.Property<int>("ResidentId")
                         .HasColumnType("int");
 
+                    b.Property<int>("SpaceId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("ResidentId");
+
+                    b.HasIndex("SpaceId");
 
                     b.ToTable("Review");
                 });
@@ -120,11 +129,19 @@ namespace api.Migrations
                     b.Property<int>("Capacity")
                         .HasColumnType("int");
 
+                    b.Property<string>("ImageBase64")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("SpaceName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("SpaceRuleId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("SpaceRuleId");
 
                     b.ToTable("Space");
                 });
@@ -141,39 +158,66 @@ namespace api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("SpaceId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("SpaceId");
 
                     b.ToTable("SpaceRule");
                 });
 
             modelBuilder.Entity("api.Models.Reservation", b =>
                 {
-                    b.HasOne("api.Models.Space", null)
+                    b.HasOne("User", "Resident")
+                        .WithMany()
+                        .HasForeignKey("ResidentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("api.Models.Space", "Space")
                         .WithMany("Reservations")
                         .HasForeignKey("SpaceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Resident");
+
+                    b.Navigation("Space");
                 });
 
-            modelBuilder.Entity("api.Models.SpaceRule", b =>
+            modelBuilder.Entity("api.Models.Review", b =>
                 {
-                    b.HasOne("api.Models.Space", null)
-                        .WithMany("SpaceRules")
+                    b.HasOne("User", "Resident")
+                        .WithMany()
+                        .HasForeignKey("ResidentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("api.Models.Space", "Space")
+                        .WithMany()
                         .HasForeignKey("SpaceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Resident");
+
+                    b.Navigation("Space");
+                });
+
+            modelBuilder.Entity("api.Models.Space", b =>
+                {
+                    b.HasOne("api.Models.SpaceRule", "SpaceRule")
+                        .WithMany("Spaces")
+                        .HasForeignKey("SpaceRuleId");
+
+                    b.Navigation("SpaceRule");
                 });
 
             modelBuilder.Entity("api.Models.Space", b =>
                 {
                     b.Navigation("Reservations");
+                });
 
-                    b.Navigation("SpaceRules");
+            modelBuilder.Entity("api.Models.SpaceRule", b =>
+                {
+                    b.Navigation("Spaces");
                 });
 #pragma warning restore 612, 618
         }

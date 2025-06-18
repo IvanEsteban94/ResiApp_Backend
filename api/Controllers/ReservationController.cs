@@ -235,17 +235,22 @@ namespace api.Controllers
         {
             var reservation = await _dbContext.Reservation.FindAsync(id);
             if (reservation == null)
-                return NotFound(new { success = false, message = "Reservation not found." });
+                return NotFound();
 
             _dbContext.Reservation.Remove(reservation);
             await _dbContext.SaveChangesAsync();
 
-            return Ok(new { success = true, message = "Reservation deleted successfully." });
+            return NoContent();
         }
+
 
         // GET api/reservation/available-slots?spaceId=1&date=2025-06-15&residentId=2&slotMinutes=60
         [HttpGet("findReservationsByAvailableSlots")]
-        public async Task<IActionResult> findReservationsByAvailableSlots([FromQuery] int spaceId, [FromQuery] DateTime date, [FromQuery] int residentId, [FromQuery] int slotMinutes = 60)
+        public async Task<IActionResult> findReservationsByAvailableSlots(
+      [FromQuery] int spaceId,
+      [FromQuery] DateTime date,
+      [FromQuery] int residentId,
+      [FromQuery] int slotMinutes = 60)
         {
             var space = await _dbContext.Space.FirstOrDefaultAsync(s => s.Id == spaceId);
             if (space == null)
@@ -254,9 +259,11 @@ namespace api.Controllers
             if (!space.Availability)
                 return BadRequest(new { success = false, message = "Space is currently unavailable." });
 
+            // Rango de horario disponible (8am a 8pm)
             var startOfDay = date.Date.AddHours(8);
             var endOfDay = date.Date.AddHours(20);
 
+            // Traer todas las reservas para ese espacio y fecha
             var reservations = await _dbContext.Reservation
                 .Where(r => r.SpaceId == spaceId && r.StartTime.Date == date.Date)
                 .ToListAsync();
@@ -268,14 +275,16 @@ namespace api.Controllers
             {
                 var currentEnd = currentStart.AddMinutes(slotMinutes);
 
-                var overlappingCount = reservations
-                    .Count(r => currentStart < r.EndTime && currentEnd > r.StartTime);
+                // Detectar si hay alguna reserva que se cruce con este bloque
+                bool isOverlapping = reservations.Any(r =>
+                    currentStart < r.EndTime && currentEnd > r.StartTime);
 
-                var residentHasReservation = reservations
-                    .Any(r => r.ResidentId == residentId &&
-                              currentStart < r.EndTime && currentEnd > r.StartTime);
+                // Verificar si el residente ya tiene una reserva en ese slot
+                bool residentHasReservation = reservations.Any(r =>
+                    r.ResidentId == residentId &&
+                    currentStart < r.EndTime && currentEnd > r.StartTime);
 
-                if (overlappingCount < space.Capacity && !residentHasReservation)
+                if (!isOverlapping && !residentHasReservation)
                 {
                     availableSlots.Add(new
                     {
@@ -289,5 +298,6 @@ namespace api.Controllers
 
             return Ok(new { success = true, data = availableSlots });
         }
+
     }
 }

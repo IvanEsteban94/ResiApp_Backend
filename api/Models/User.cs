@@ -11,8 +11,11 @@ public class User
     public string PasswordHash { get; set; } = null!;
 
     [Required]
-    public string Role { get; set; } = "Resident"; 
+    public string Role { get; set; } = "Resident";
 
     public string? ResidentName { get; set; }
     public string? ApartmentInformation { get; set; }
+
+  
+    public string SecurityWord { get; set; } = null!;
 }

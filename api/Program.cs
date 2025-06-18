@@ -1,34 +1,28 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.OpenApi.Models;
-using api.Models;
 using MyApi.Data;
-using MyApi.Services;
-using api.Interface;
-using api.services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configuración de base de datos
+// Configuración de servicios
+builder.Services.AddControllers();
+
+// ✅ Registro del DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Servicios personalizados
-builder.Services.AddScoped<AuthService>();
-builder.Services.AddSingleton<ITokenBlacklistService, InMemoryTokenBlacklistService>();
-
-// Autenticación JWT
-builder.Services.AddAuthentication("Bearer")
+// 🔐 Configuración de autenticación JWT
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         var jwtKey = builder.Configuration["Jwt:Key"];
         var jwtIssuer = builder.Configuration["Jwt:Issuer"];
         var jwtAudience = builder.Configuration["Jwt:Audience"];
 
-        var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
-
+        var keyBytes = Encoding.UTF8.GetBytes(jwtKey!);
         if (keyBytes.Length < 32)
             throw new ArgumentException("The JWT key must be at least 256 bits (32 bytes).");
 
@@ -36,6 +30,8 @@ builder.Services.AddAuthentication("Bearer")
         {
             ValidateIssuer = true,
             ValidateAudience = true,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero,
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtIssuer,
             ValidAudience = jwtAudience,
@@ -44,78 +40,54 @@ builder.Services.AddAuthentication("Bearer")
 
         options.Events = new JwtBearerEvents
         {
-            OnMessageReceived = context =>
+            OnAuthenticationFailed = context =>
             {
-                var path = context.HttpContext.Request.Path;
-                if (path.StartsWithSegments("/api/auth/logout"))
+                if (context.Exception is SecurityTokenExpiredException)
                 {
-                    context.NoResult();
+                    context.Response.Headers.Add("Token-Expired", "true");
                 }
                 return Task.CompletedTask;
             }
         };
     });
 
-// Políticas de autorización
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("OnlyResidente", policy => policy.RequireRole("Residente"));
-    options.AddPolicy("OnlyAdmin", policy => policy.RequireRole("Admin"));
-});
-
-// CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
-    });
-});
-
-// Controladores y Swagger
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
+// 📘 Configuración de Swagger
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "MyApi", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header usando Bearer. Escribe 'Bearer ' seguido de tu token.",
+        Description = "Autorización JWT usando el esquema Bearer. Ejemplo: 'Bearer {token}'",
         Name = "Authorization",
         In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer"
     });
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
-            new OpenApiSecurityScheme {
-                Reference = new OpenApiReference {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
                     Type = ReferenceType.SecurityScheme,
                     Id = "Bearer"
-                },
-                In = ParameterLocation.Header,
+                }
             },
-            new List<string>()
+            Array.Empty<string>()
         }
     });
 });
 
 var app = builder.Build();
 
-app.UseCors("AllowAll");
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
-
-app.UseAuthentication();
+app.UseAuthentication(); // ⚠️ Antes de Authorization
 app.UseAuthorization();
 
 app.MapControllers();

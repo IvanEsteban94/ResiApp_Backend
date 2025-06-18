@@ -40,26 +40,54 @@ namespace MyApi.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var response = await _auth.LoginAsync(request.Email, request.Password);
+            // Obtener token anterior del header Authorization (si existe)
+            var authHeader = Request.Headers["Authorization"].ToString();
+            string? oldToken = null;
+            bool? oldTokenValid = null;
 
+            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
+            {
+                oldToken = authHeader.Replace("Bearer ", "");
+                oldTokenValid = !await _auth.IsTokenRevokedAsync(oldToken);
+            }
+
+            // Proceso normal de login
+            var response = await _auth.LoginAsync(request.Email, request.Password);
             if (response == null)
                 return Unauthorized("Invalid credentials.");
 
-            return Ok(new { token = response.Token, role = response.Role, residentId = response.ResidentId, resident = response.Resident });
+            return Ok(new
+            {
+                token = response.Token,
+                role = response.Role,
+                residentId = response.ResidentId,
+                resident = response.Resident,
+                previousTokenValid = oldTokenValid  // null si no se envió, true o false si se verificó
+            });
         }
+
 
         [HttpPost("change-password")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
-            if (string.IsNullOrEmpty(request.Email))
-                return BadRequest("Email is required.");
+            if (string.IsNullOrWhiteSpace(request.Email) ||
+                string.IsNullOrWhiteSpace(request.CurrentPassword) ||
+                string.IsNullOrWhiteSpace(request.NewPassword) ||
+                string.IsNullOrWhiteSpace(request.SecurityWord))
+            {
+                return BadRequest("All fields are required.");
+            }
 
-            var success = await _auth.ChangePasswordAsync(request.Email, request.CurrentPassword, request.NewPassword);
+            var success = await _auth.ChangePasswordAsync(
+                request.Email,
+                request.CurrentPassword,
+                request.NewPassword,
+                request.SecurityWord);
 
             if (!success)
-                return BadRequest("The current password is incorrect.");
+                return BadRequest("Current password or security word is incorrect.");
 
-            return Ok(new { message = "Password changed successfully" });
+            return Ok(new { message = "Password changed successfully." });
         }
 
 

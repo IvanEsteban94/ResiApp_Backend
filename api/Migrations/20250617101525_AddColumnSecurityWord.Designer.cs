@@ -12,8 +12,8 @@ using MyApi.Data;
 namespace api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250606094943_CheckForSpaceId")]
-    partial class CheckForSpaceId
+    [Migration("20250617101525_AddColumnSecurityWord")]
+    partial class AddColumnSecurityWord
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -51,6 +51,10 @@ namespace api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("SecurityWord")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.ToTable("User");
@@ -77,6 +81,8 @@ namespace api.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ResidentId");
 
                     b.HasIndex("SpaceId");
 
@@ -106,6 +112,10 @@ namespace api.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ResidentId");
+
+                    b.HasIndex("SpaceId");
+
                     b.ToTable("Review");
                 });
 
@@ -122,6 +132,9 @@ namespace api.Migrations
 
                     b.Property<int>("Capacity")
                         .HasColumnType("int");
+
+                    b.Property<string>("ImageBase64")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SpaceName")
                         .IsRequired()
@@ -156,11 +169,38 @@ namespace api.Migrations
 
             modelBuilder.Entity("api.Models.Reservation", b =>
                 {
+                    b.HasOne("User", "Resident")
+                        .WithMany()
+                        .HasForeignKey("ResidentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("api.Models.Space", "Space")
+                        .WithMany("Reservations")
+                        .HasForeignKey("SpaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Resident");
+
+                    b.Navigation("Space");
+                });
+
+            modelBuilder.Entity("api.Models.Review", b =>
+                {
+                    b.HasOne("User", "Resident")
+                        .WithMany()
+                        .HasForeignKey("ResidentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("api.Models.Space", "Space")
                         .WithMany()
                         .HasForeignKey("SpaceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Resident");
 
                     b.Navigation("Space");
                 });
@@ -169,10 +209,14 @@ namespace api.Migrations
                 {
                     b.HasOne("api.Models.SpaceRule", "SpaceRule")
                         .WithMany("Spaces")
-                        .HasForeignKey("SpaceRuleId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("SpaceRuleId");
 
                     b.Navigation("SpaceRule");
+                });
+
+            modelBuilder.Entity("api.Models.Space", b =>
+                {
+                    b.Navigation("Reservations");
                 });
 
             modelBuilder.Entity("api.Models.SpaceRule", b =>

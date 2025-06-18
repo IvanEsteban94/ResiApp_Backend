@@ -9,6 +9,12 @@
 
         public int? SpaceRuleId { get; set; }
         public SpaceRule? SpaceRule { get; set; }
-        public ICollection<Reservation> Reservations { get; set; } = new List<Reservation>(); // Relación
-    }
+        public ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
+
+        // Nueva propiedad para la imagen en base64
+        public string? ImageBase64
+        {
+            get; set;
+        }
+}
 }

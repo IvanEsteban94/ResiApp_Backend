@@ -6,7 +6,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
-using api.Interface; // Asegúrate de que la interfaz esté en este namespace
+using api.Interface;
+using api.Utilidy; // Asegúrate de que la interfaz esté en este namespace
 
 namespace MyApi.Services
 {
@@ -60,18 +61,25 @@ namespace MyApi.Services
                 Resident = user.ResidentName
             };
         }
-        public async Task<bool> ChangePasswordAsync(string email, string currentPassword, string newPassword)
+        public async Task<bool> ChangePasswordAsync(string email, string currentPassword, string newPassword, string securityWord)
         {
             var user = await _context.User.FirstOrDefaultAsync(u => u.Email == email);
-
-            if (user == null || !BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash))
+            if (user == null)
                 return false;
 
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            if (!PasswordUtils.VerifySecurityWord(securityWord, user.SecurityWord))
+                return false;
+
+           
+            if (!PasswordUtils.VerifyPassword(currentPassword, user.PasswordHash))
+                return false;
+
+           
+            user.PasswordHash = PasswordUtils.Hash(newPassword);
             await _context.SaveChangesAsync();
+
             return true;
         }
-
         public async Task LogoutAsync(string token)
         {
             var handler = new JwtSecurityTokenHandler();
@@ -90,6 +98,7 @@ namespace MyApi.Services
         {
             return await _context.User.AnyAsync(u => u.Email == email);
         }
+      
 
         private string GenerateJwtToken(string email, string role)
         {

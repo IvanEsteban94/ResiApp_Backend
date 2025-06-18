@@ -101,7 +101,8 @@ namespace api.Controllers
                 SpaceName = dto.SpaceName,
                 Capacity = dto.Capacity,
                 Availability = dto.Availability,
-                SpaceRuleId = dto.SpaceRuleId.Value
+                SpaceRuleId = dto.SpaceRuleId.Value,
+                ImageBase64 = dto.ImageBase64 
             };
 
             _context.Space.Add(space);
@@ -113,11 +114,13 @@ namespace api.Controllers
                 SpaceName = space.SpaceName,
                 Capacity = space.Capacity,
                 Availability = space.Availability,
-                SpaceRules = new List<SpaceRule>() 
+                ImageBase64 = space.ImageBase64, 
+                SpaceRules = new List<SpaceRule>()
             };
 
             return CreatedAtAction(nameof(findSpacesById), new { id = space.Id }, resultDto);
         }
+
 
         // PUT: api/space/5
         [HttpPut("{id}")]
