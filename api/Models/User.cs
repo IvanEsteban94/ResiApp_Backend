@@ -16,6 +16,6 @@ public class User
     public string? ResidentName { get; set; }
     public string? ApartmentInformation { get; set; }
 
-  
-    public string SecurityWord { get; set; } = null!;
+    [Required]
+    public string? SecurityWord { get; set; } = null!;
 }

@@ -165,6 +165,11 @@ namespace api.Controllers
             if (space == null)
                 return NotFound(new { success = false, message = "Space not found." });
 
+            // ❗ Validar si queda capacidad
+            if (space.Capacity <= 0)
+                return BadRequest(new { success = false, message = "No remaining capacity for this space." });
+
+            // Verificar solapamiento de horarios
             var overlappingReservationsCount = await _dbContext.Reservation
                 .Where(r => r.SpaceId == reservationDto.SpaceId &&
                             ((reservationDto.StartTime >= r.StartTime && reservationDto.StartTime < r.EndTime) ||
@@ -184,6 +189,11 @@ namespace api.Controllers
             };
 
             await _dbContext.Reservation.AddAsync(reservation);
+
+            // 🔻 Reducir capacidad en 1
+            space.Capacity -= 1;
+            _dbContext.Space.Update(space);
+
             await _dbContext.SaveChangesAsync();
 
             return CreatedAtAction(nameof(findReservationsById), new { id = reservation.Id }, new { success = true, message = "Reservation created successfully." });
@@ -243,15 +253,15 @@ namespace api.Controllers
             return NoContent();
         }
 
-
-        // GET api/reservation/available-slots?spaceId=1&date=2025-06-15&residentId=2&slotMinutes=60
         [HttpGet("findReservationsByAvailableSlots")]
         public async Task<IActionResult> findReservationsByAvailableSlots(
-      [FromQuery] int spaceId,
-      [FromQuery] DateTime date,
-      [FromQuery] int residentId,
-      [FromQuery] int slotMinutes = 60)
+    [FromQuery] int spaceId,
+    [FromQuery] DateTime date,
+    [FromQuery] int residentId,
+    [FromQuery] int slotMinutes = 60)
         {
+            const int MAX_RESERVATIONS_PER_DAY = 2; // ✅ Límite de reservas por día
+
             var space = await _dbContext.Space.FirstOrDefaultAsync(s => s.Id == spaceId);
             if (space == null)
                 return NotFound(new { success = false, message = "Space not found." });
@@ -259,14 +269,24 @@ namespace api.Controllers
             if (!space.Availability)
                 return BadRequest(new { success = false, message = "Space is currently unavailable." });
 
-            // Rango de horario disponible (8am a 8pm)
+            if (date.Date < DateTime.Today)
+                return BadRequest(new { success = false, message = "Cannot view or make reservations for past dates." });
+
             var startOfDay = date.Date.AddHours(8);
             var endOfDay = date.Date.AddHours(20);
 
-            // Traer todas las reservas para ese espacio y fecha
             var reservations = await _dbContext.Reservation
                 .Where(r => r.SpaceId == spaceId && r.StartTime.Date == date.Date)
                 .ToListAsync();
+
+            // 🔍 Ver cuántas reservas ya tiene el residente ese día
+            int residentDailyReservations = reservations
+                .Count(r => r.ResidentId == residentId);
+
+            if (residentDailyReservations >= MAX_RESERVATIONS_PER_DAY)
+            {
+                return Ok(new { success = true, data = new List<object>() }); // ❌ No se muestran más slots
+            }
 
             var availableSlots = new List<object>();
             var currentStart = startOfDay;
@@ -275,29 +295,43 @@ namespace api.Controllers
             {
                 var currentEnd = currentStart.AddMinutes(slotMinutes);
 
-                // Detectar si hay alguna reserva que se cruce con este bloque
-                bool isOverlapping = reservations.Any(r =>
-                    currentStart < r.EndTime && currentEnd > r.StartTime);
+                var overlappingReservations = reservations
+                    .Where(r => currentStart < r.EndTime && currentEnd > r.StartTime)
+                    .ToList();
 
-                // Verificar si el residente ya tiene una reserva en ese slot
-                bool residentHasReservation = reservations.Any(r =>
-                    r.ResidentId == residentId &&
-                    currentStart < r.EndTime && currentEnd > r.StartTime);
-
-                if (!isOverlapping && !residentHasReservation)
+                // ❌ No mostrar si la capacidad ya fue alcanzada
+                if (overlappingReservations.Count >= space.Capacity)
                 {
-                    availableSlots.Add(new
-                    {
-                        StartTime = currentStart.ToString("yyyy-MM-ddTHH:mm:ss"),
-                        EndTime = currentEnd.ToString("yyyy-MM-ddTHH:mm:ss")
-                    });
+                    currentStart = currentStart.AddMinutes(slotMinutes);
+                    continue;
                 }
+
+                // ❌ No mostrar si el residente ya tiene reserva en ese horario
+                bool residentHasReservation = overlappingReservations
+                    .Any(r => r.ResidentId == residentId);
+
+                if (residentHasReservation)
+                {
+                    currentStart = currentStart.AddMinutes(slotMinutes);
+                    continue;
+                }
+
+                // ✅ Agregar slot disponible
+                availableSlots.Add(new
+                {
+                    StartTime = currentStart.ToString("yyyy-MM-ddTHH:mm:ss"),
+                    EndTime = currentEnd.ToString("yyyy-MM-ddTHH:mm:ss")
+                });
 
                 currentStart = currentStart.AddMinutes(slotMinutes);
             }
 
             return Ok(new { success = true, data = availableSlots });
         }
+
+
+
+
 
     }
 }

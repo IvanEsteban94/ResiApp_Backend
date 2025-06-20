@@ -1,13 +1,13 @@
-﻿using api.Models;
+﻿using api.Interface;
+using api.Models;
 using api.Models.DTO;
-using MyApi.Data;
+using api.Utilidy;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using MyApi.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.EntityFrameworkCore;
-using api.Interface;
-using api.Utilidy; // Asegúrate de que la interfaz esté en este namespace
 
 namespace MyApi.Services
 {
@@ -24,11 +24,12 @@ namespace MyApi.Services
             _blacklist = blacklist;
         }
 
-        public async Task<string?> RegisterAsync(string email, string password, string role, string? residentName = null, string? apartmentInfo = null)
+        public async Task<string?> RegisterAsync(string email, string password, string role, string? residentName = null, string? apartmentInfo = null, string? securityWord = null)
         {
             if (await UserExists(email)) return null;
 
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
+            var hashedSecurityWord = PasswordUtils.Hash(securityWord ?? "");
 
             var user = new User
             {
@@ -36,7 +37,8 @@ namespace MyApi.Services
                 PasswordHash = hashedPassword,
                 Role = role,
                 ResidentName = role == "Resident" ? residentName : null,
-                ApartmentInformation = role == "Resident" ? apartmentInfo : null
+                ApartmentInformation = role == "Resident" ? apartmentInfo : null,
+                SecurityWord = hashedSecurityWord
             };
 
             _context.User.Add(user);
@@ -61,25 +63,22 @@ namespace MyApi.Services
                 Resident = user.ResidentName
             };
         }
+
         public async Task<bool> ChangePasswordAsync(string email, string currentPassword, string newPassword, string securityWord)
         {
             var user = await _context.User.FirstOrDefaultAsync(u => u.Email == email);
-            if (user == null)
-                return false;
+            if (user == null) return false;
 
-            if (!PasswordUtils.VerifySecurityWord(securityWord, user.SecurityWord))
-                return false;
+            if (!PasswordUtils.VerifySecurityWord(securityWord, user.SecurityWord)) return false;
 
-           
-            if (!PasswordUtils.VerifyPassword(currentPassword, user.PasswordHash))
-                return false;
+            if (!PasswordUtils.VerifyPassword(currentPassword, user.PasswordHash)) return false;
 
-           
             user.PasswordHash = PasswordUtils.Hash(newPassword);
             await _context.SaveChangesAsync();
 
             return true;
         }
+
         public async Task LogoutAsync(string token)
         {
             var handler = new JwtSecurityTokenHandler();
@@ -98,15 +97,14 @@ namespace MyApi.Services
         {
             return await _context.User.AnyAsync(u => u.Email == email);
         }
-      
 
         private string GenerateJwtToken(string email, string role)
         {
             var claims = new[]
             {
-        new Claim(ClaimTypes.Name, email),
-        new Claim(ClaimTypes.Role, role)
-    };
+                new Claim(ClaimTypes.Name, email),
+                new Claim(ClaimTypes.Role, role)
+            };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -115,11 +113,10 @@ namespace MyApi.Services
                 issuer: _config["Jwt:Issuer"],
                 audience: _config["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(15), 
+                expires: DateTime.UtcNow.AddMinutes(15),
                 signingCredentials: creds);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-
     }
 }

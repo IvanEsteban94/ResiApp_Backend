@@ -1,38 +1,58 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using api.Interface;
+using api.services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MyApi.Data;
+using MyApi.Services;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configuración de servicios
+// Agregar controladores
 builder.Services.AddControllers();
 
-// ✅ Registro del DbContext
+// Configurar CORS para permitir todo (ajusta según necesites)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader());
+});
+
+// Configurar conexión a base de datos SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 🔐 Configuración de autenticación JWT
+// Registrar ITokenBlacklistService y su implementación correcta
+builder.Services.AddScoped<ITokenBlacklistService, InMemoryTokenBlacklistService>();
+
+// Registrar servicio de autenticación
+builder.Services.AddScoped<AuthService>();
+
+// Obtener configuración JWT desde appsettings.json o variables de entorno
+var jwtKey = builder.Configuration["Jwt:Key"];
+var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+var jwtAudience = builder.Configuration["Jwt:Audience"];
+
+// Validar longitud clave JWT
+var keyBytes = Encoding.UTF8.GetBytes(jwtKey!);
+if (keyBytes.Length < 32)
+    throw new ArgumentException("La clave JWT debe tener al menos 32 caracteres (256 bits)");
+
+// Configurar autenticación JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        var jwtKey = builder.Configuration["Jwt:Key"];
-        var jwtIssuer = builder.Configuration["Jwt:Issuer"];
-        var jwtAudience = builder.Configuration["Jwt:Audience"];
-
-        var keyBytes = Encoding.UTF8.GetBytes(jwtKey!);
-        if (keyBytes.Length < 32)
-            throw new ArgumentException("The JWT key must be at least 256 bits (32 bytes).");
-
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero,
             ValidateIssuerSigningKey = true,
+            ClockSkew = TimeSpan.Zero,
             ValidIssuer = jwtIssuer,
             ValidAudience = jwtAudience,
             IssuerSigningKey = new SymmetricSecurityKey(keyBytes)
@@ -44,21 +64,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             {
                 if (context.Exception is SecurityTokenExpiredException)
                 {
-                    context.Response.Headers.Add("Token-Expired", "true");
+                    context.Response.Headers.Append("Token-Expired", "true");
                 }
                 return Task.CompletedTask;
             }
         };
     });
 
-// 📘 Configuración de Swagger
+// Configurar Swagger con soporte JWT
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "Autorización JWT usando el esquema Bearer. Ejemplo: 'Bearer {token}'",
+        Description = "Autorización JWT usando Bearer. Ejemplo: 'Bearer {token}'",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
@@ -70,11 +91,7 @@ builder.Services.AddSwaggerGen(c =>
         {
             new OpenApiSecurityScheme
             {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
             },
             Array.Empty<string>()
         }
@@ -83,11 +100,18 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+// Middleware para desarrollo
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.UseHttpsRedirection();
-app.UseAuthentication(); // ⚠️ Antes de Authorization
+
+app.UseCors("AllowAll");
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

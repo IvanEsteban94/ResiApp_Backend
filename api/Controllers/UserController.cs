@@ -56,15 +56,21 @@ namespace api.Controllers
                 Email = dto.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 ApartmentInformation = dto.ApartmentInformation,
-                Role = dto.Role
+                Role = dto.Role,
+                SecurityWord = BCrypt.Net.BCrypt.HashPassword(dto.SecurityWord) // Hasheando SecurityWord
             };
 
             _db.User.Add(user);
             _db.SaveChanges();
 
-            return CreatedAtAction(nameof(findUserById), new { id = user.Id }, new { success = true, id = user.Id, message = "User created successfully." });
+            return CreatedAtAction(nameof(findUserById), new { id = user.Id }, new
+            {
+                success = true,
+                id = user.Id,
+                message = "User created successfully."
+            });
         }
-        // PUT api/user/5
+
         [HttpPut("{id}")]
         public IActionResult User(int id, [FromBody] UserCreateDto dto)
         {
@@ -72,7 +78,6 @@ namespace api.Controllers
             if (user == null)
                 return NotFound(new { success = false, message = "User not found." });
 
-            // Solo actualiza si el campo tiene valor
             if (!string.IsNullOrWhiteSpace(dto.ResidentName))
                 user.ResidentName = dto.ResidentName;
 
@@ -85,8 +90,21 @@ namespace api.Controllers
             if (!string.IsNullOrWhiteSpace(dto.Role))
                 user.Role = dto.Role;
 
+            // ✅ Si Password no es nulo ni vacío, validarlo y actualizarlo
             if (!string.IsNullOrWhiteSpace(dto.Password))
+            {
+                if (dto.Password.Length < 6)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Password must be at least 6 characters long."
+                    });
+                }
+
                 user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+            }
+            // 🚫 Si viene vacío o nulo, no hacer nada con la contraseña (se conserva)
 
             _db.User.Update(user);
             _db.SaveChanges();

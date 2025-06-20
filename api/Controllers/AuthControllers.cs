@@ -34,7 +34,12 @@ namespace MyApi.Controllers
             if (token == null)
                 return BadRequest("The user already exists.");
 
-            return Ok(new { token });
+            return Ok(new
+            {
+                token,
+                role = defaultRole,
+                residentName = request.ResidentName
+            });
         }
 
         [HttpPost("login")]
@@ -62,7 +67,7 @@ namespace MyApi.Controllers
                 role = response.Role,
                 residentId = response.ResidentId,
                 resident = response.Resident,
-                previousTokenValid = oldTokenValid  // null si no se envió, true o false si se verificó
+                previousTokenValid = oldTokenValid  
             });
         }
 

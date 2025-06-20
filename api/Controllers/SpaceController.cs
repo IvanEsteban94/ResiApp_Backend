@@ -23,22 +23,23 @@ namespace api.Controllers
         public async Task<ActionResult<IEnumerable<SpaceDto>>> FindSpaces()
         {
             var spaces = await _context.Space
-                .Include(s => s.SpaceRule)  // Asegúrate que la entidad Space tiene la propiedad de navegación SpaceRule
+                .Include(s => s.SpaceRule)
                 .Select(s => new SpaceDto
                 {
                     Id = s.Id,
                     SpaceName = s.SpaceName,
                     Capacity = s.Capacity,
                     Availability = s.Availability,
+                    ImageBase64 = s.ImageBase64, // <-- Agregado
                     SpaceRules = s.SpaceRule != null
                         ? new List<SpaceRule>
-                            {
-                        new SpaceRule
                         {
-                            Id = s.SpaceRule.Id,
-                            Rule = s.SpaceRule.Rule
+                    new SpaceRule
+                    {
+                        Id = s.SpaceRule.Id,
+                        Rule = s.SpaceRule.Rule
+                    }
                         }
-                            }
                         : new List<SpaceRule>()
                 })
                 .ToListAsync();
@@ -49,12 +50,11 @@ namespace api.Controllers
 
 
 
-
         [HttpGet("findSpacesById/{id}")]
         public async Task<ActionResult<SpaceDto>> findSpacesById(int id)
         {
             var space = await _context.Space
-                .Include(s => s.SpaceRule) // Asegura que SpaceRule se incluya
+                .Include(s => s.SpaceRule)
                 .FirstOrDefaultAsync(s => s.Id == id);
 
             if (space == null) return NotFound();
@@ -65,20 +65,22 @@ namespace api.Controllers
                 SpaceName = space.SpaceName,
                 Capacity = space.Capacity,
                 Availability = space.Availability,
+                ImageBase64 = space.ImageBase64, // <-- Agregado
                 SpaceRules = space.SpaceRule != null
-                    ? new List<SpaceRule>   // <-- corregido aquí
+                    ? new List<SpaceRule>
                     {
-               new SpaceRule
-               {
-                   Id = space.SpaceRule.Id,
-                   Rule = space.SpaceRule.Rule
-               }
+                new SpaceRule
+                {
+                    Id = space.SpaceRule.Id,
+                    Rule = space.SpaceRule.Rule
+                }
                     }
                     : new List<SpaceRule>()
             };
 
             return Ok(dto);
         }
+
 
 
         // POST: api/space
