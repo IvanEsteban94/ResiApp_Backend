@@ -17,6 +17,17 @@ namespace MyApi.Controllers
         {
             _auth = auth;
         }
+        [Authorize]
+        [HttpGet("validate-token")]
+        public IActionResult ValidateToken()
+        {
+            var email = User.FindFirstValue(ClaimTypes.Email);
+
+            if (string.IsNullOrEmpty(email))
+                return Unauthorized(new { valid = false, message = "Invalid token." });
+
+            return Ok(new { valid = true, message = "Token is valid.", email });
+        }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterResidentRequest request)
@@ -28,7 +39,8 @@ namespace MyApi.Controllers
                 request.Password,
                 defaultRole,
                 request.ResidentName,
-                request.ApartmentInformation
+                request.ApartmentInformation,
+                request.SecurityWord  // ✅ Agregado aquí
             );
 
             if (token == null)
@@ -41,6 +53,21 @@ namespace MyApi.Controllers
                 residentName = request.ResidentName
             });
         }
+
+        [HttpPut("update-security-word")]
+        public async Task<IActionResult> UpdateSecurityWord([FromBody] UpdateSecurityWordRequest request)
+        {
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (email == null)
+                return Unauthorized("Unauthorized user.");
+
+            var success = await _auth.UpdateSecurityWordAsync(email, request.CurrentSecurityWord, request.NewSecurityWord);
+            if (!success)
+                return BadRequest(new { success = false, message = "Current security word is incorrect." });
+
+            return Ok(new { success = true, message = "Security word updated successfully." });
+        }
+
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)

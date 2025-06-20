@@ -23,6 +23,17 @@ namespace MyApi.Services
             _config = config;
             _blacklist = blacklist;
         }
+        public async Task<bool> UpdateSecurityWordAsync(string email, string currentWord, string newWord)
+        {
+            var user = await _context.User.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null || user.SecurityWord != currentWord)
+                return false;
+
+            user.SecurityWord = newWord;
+            _context.User.Update(user);
+            await _context.SaveChangesAsync();
+            return true;
+        }
 
         public async Task<string?> RegisterAsync(string email, string password, string role, string? residentName = null, string? apartmentInfo = null, string? securityWord = null)
         {
@@ -117,6 +128,11 @@ namespace MyApi.Services
                 signingCredentials: creds);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        internal async Task RegisterAsync(string email, string password, string defaultRole, string? residentName, string? apartmentInformation, object securityWord)
+        {
+            throw new NotImplementedException();
         }
     }
 }
