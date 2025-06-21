@@ -54,21 +54,7 @@ namespace MyApi.Controllers
             });
         }
 
-        [HttpPut("update-security-word")]
-        public async Task<IActionResult> UpdateSecurityWord([FromBody] UpdateSecurityWordRequest request)
-        {
-            var email = User.FindFirstValue(ClaimTypes.Email);
-            if (email == null)
-                return Unauthorized("Unauthorized user.");
-
-            var success = await _auth.UpdateSecurityWordAsync(email, request.CurrentSecurityWord, request.NewSecurityWord);
-            if (!success)
-                return BadRequest(new { success = false, message = "Current security word is incorrect." });
-
-            return Ok(new { success = true, message = "Security word updated successfully." });
-        }
-
-
+    
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
@@ -99,7 +85,7 @@ namespace MyApi.Controllers
         }
 
 
-        [HttpPost("change-password")]
+        [HttpPost("FORGOT-PASSWORD")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Email) ||

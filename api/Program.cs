@@ -32,6 +32,9 @@ builder.Services.AddScoped<ITokenBlacklistService, InMemoryTokenBlacklistService
 // Registrar servicio de autenticación
 builder.Services.AddScoped<AuthService>();
 
+// Registrar servicio de envío de correos
+builder.Services.AddSingleton<EmailService>();
+
 // Obtener configuración JWT desde appsettings.json o variables de entorno
 var jwtKey = builder.Configuration["Jwt:Key"];
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
