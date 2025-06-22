@@ -240,7 +240,7 @@ namespace api.Controllers
 
         // DELETE api/reservation/5  => eliminar reserva (solo admin)
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+      
         public async Task<IActionResult> Reservations(int id)
         {
             var reservation = await _dbContext.Reservation.FindAsync(id);
