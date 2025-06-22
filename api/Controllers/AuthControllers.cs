@@ -89,7 +89,6 @@ namespace MyApi.Controllers
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Email) ||
-                string.IsNullOrWhiteSpace(request.CurrentPassword) ||
                 string.IsNullOrWhiteSpace(request.NewPassword) ||
                 string.IsNullOrWhiteSpace(request.SecurityWord))
             {
@@ -98,7 +97,6 @@ namespace MyApi.Controllers
 
             var success = await _auth.ChangePasswordAsync(
                 request.Email,
-                request.CurrentPassword,
                 request.NewPassword,
                 request.SecurityWord);
 

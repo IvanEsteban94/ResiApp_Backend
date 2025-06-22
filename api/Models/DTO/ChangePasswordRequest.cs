@@ -8,9 +8,6 @@ namespace api.Models.DTO
         public string Email { get; set; } = null!;
 
         [Required]
-        public string CurrentPassword { get; set; } = null!;
-
-        [Required]
         public string NewPassword { get; set; } = null!;
 
         [Required]
