@@ -254,9 +254,9 @@ namespace api.Controllers
         }
         [HttpGet("findReservationsByAvailableSlots")]
         public async Task<IActionResult> findReservationsByAvailableSlots(
-      [FromQuery] int spaceId,
-      [FromQuery] DateTime date,
-      [FromQuery] int slotMinutes = 60)
+     [FromQuery] int spaceId,
+     [FromQuery] DateTime date,
+     [FromQuery] int slotMinutes = 60)
         {
             var space = await _dbContext.Space.FirstOrDefaultAsync(s => s.Id == spaceId);
             if (space == null)
@@ -268,9 +268,11 @@ namespace api.Controllers
             if (date.Date < DateTime.Today)
                 return BadRequest(new { success = false, message = "Cannot view or make reservations for past dates." });
 
+            // Rango horario del día: 08:00 a 20:00
             var startOfDay = date.Date.AddHours(8);
             var endOfDay = date.Date.AddHours(20);
 
+            // Traer reservas del espacio para ese día
             var reservations = await _dbContext.Reservation
                 .Where(r => r.SpaceId == spaceId &&
                             r.StartTime < endOfDay &&
@@ -285,16 +287,19 @@ namespace api.Controllers
                 var currentEnd = currentStart.AddMinutes(slotMinutes);
                 if (currentEnd > endOfDay) break;
 
+                // Revisar si el slot se solapa con alguna reserva
                 var overlappingReservations = reservations
                     .Where(r => currentStart < r.EndTime && currentEnd > r.StartTime)
                     .ToList();
 
-                if (overlappingReservations.Count >= space.Capacity)
+                // Si hay solapamiento, no es válido
+                if (overlappingReservations.Any())
                 {
                     currentStart = currentStart.AddMinutes(slotMinutes);
                     continue;
                 }
 
+                // Slot disponible
                 availableSlots.Add(new
                 {
                     StartTime = currentStart.ToString("yyyy-MM-ddTHH:mm:ss"),
