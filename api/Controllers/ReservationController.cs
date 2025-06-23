@@ -151,7 +151,6 @@ namespace api.Controllers
             return Ok(new { success = true, data = response });
         }
 
-        // POST api/reservation  => crear reserva
         [HttpPost]
         public async Task<IActionResult> Reservations([FromBody] ReservationDto reservationDto)
         {
@@ -165,11 +164,25 @@ namespace api.Controllers
             if (space == null)
                 return NotFound(new { success = false, message = "Space not found." });
 
-            // ❗ Validar si queda capacidad
             if (space.Capacity <= 0)
                 return BadRequest(new { success = false, message = "No remaining capacity for this space." });
 
-            // Verificar solapamiento de horarios
+         
+            var reservationDate = reservationDto.StartTime.Date;
+            var startOfDay = reservationDate.AddHours(0);
+            var endOfDay = reservationDate.AddDays(1).AddSeconds(-1);
+
+            var dailyReservationCount = await _dbContext.Reservation
+                .Where(r =>
+                    r.ResidentId == reservationDto.ResidentId &&
+                    r.SpaceId == reservationDto.SpaceId &&
+                    r.StartTime >= startOfDay &&
+                    r.StartTime <= endOfDay)
+                .CountAsync();
+
+            if (dailyReservationCount >= 5)
+                return BadRequest(new { success = false, message = "You have reached the daily limit of 5 reservations for this space." });
+
             var overlappingReservationsCount = await _dbContext.Reservation
                 .Where(r => r.SpaceId == reservationDto.SpaceId &&
                             ((reservationDto.StartTime >= r.StartTime && reservationDto.StartTime < r.EndTime) ||
@@ -190,7 +203,6 @@ namespace api.Controllers
 
             await _dbContext.Reservation.AddAsync(reservation);
 
-            // 🔻 Reducir capacidad en 1
             space.Capacity -= 1;
             _dbContext.Space.Update(space);
 
@@ -199,44 +211,44 @@ namespace api.Controllers
             return CreatedAtAction(nameof(findReservationsById), new { id = reservation.Id }, new { success = true, message = "Reservation created successfully." });
         }
 
-        // PUT api/reservation/5  => actualizar reserva
         [HttpPut("{id}")]
-        public async Task<IActionResult> Reservations(int id, [FromBody] Reservation updatedReservation)
+        public async Task<IActionResult> Reservations(int id, [FromBody] UpdateReservationDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (updatedReservation.EndTime <= updatedReservation.StartTime)
+            if (dto.EndTime <= dto.StartTime)
                 return BadRequest(new { success = false, message = "EndTime must be after StartTime." });
 
             var reservation = await _dbContext.Reservation.FirstOrDefaultAsync(r => r.Id == id);
             if (reservation == null)
                 return NotFound(new { success = false, message = "Reservation not found." });
 
-            var space = await _dbContext.Space.FirstOrDefaultAsync(s => s.Id == updatedReservation.SpaceId);
+            var space = await _dbContext.Space.FirstOrDefaultAsync(s => s.Id == dto.SpaceId);
             if (space == null)
                 return NotFound(new { success = false, message = "Target space not found." });
 
             var overlappingCount = await _dbContext.Reservation
-                .Where(r => r.SpaceId == updatedReservation.SpaceId && r.Id != id &&
-                            ((updatedReservation.StartTime >= r.StartTime && updatedReservation.StartTime < r.EndTime) ||
-                             (updatedReservation.EndTime > r.StartTime && updatedReservation.EndTime <= r.EndTime) ||
-                             (updatedReservation.StartTime <= r.StartTime && updatedReservation.EndTime >= r.EndTime)))
+                .Where(r => r.SpaceId == dto.SpaceId && r.Id != id &&
+                            ((dto.StartTime >= r.StartTime && dto.StartTime < r.EndTime) ||
+                             (dto.EndTime > r.StartTime && dto.EndTime <= r.EndTime) ||
+                             (dto.StartTime <= r.StartTime && dto.EndTime >= r.EndTime)))
                 .CountAsync();
 
             if (overlappingCount >= space.Capacity)
                 return BadRequest(new { success = false, message = "No available capacity for the selected time slot." });
 
-            reservation.StartTime = updatedReservation.StartTime;
-            reservation.EndTime = updatedReservation.EndTime;
-            reservation.ResidentId = updatedReservation.ResidentId;
-            reservation.SpaceId = updatedReservation.SpaceId;
+            reservation.StartTime = dto.StartTime;
+            reservation.EndTime = dto.EndTime;
+            reservation.ResidentId = dto.ResidentId;
+            reservation.SpaceId = dto.SpaceId;
 
             _dbContext.Reservation.Update(reservation);
             await _dbContext.SaveChangesAsync();
 
             return Ok(new { success = true, message = "Reservation updated successfully." });
         }
+
 
         // DELETE api/reservation/5  => eliminar reserva (solo admin)
         [HttpDelete("{id}")]
