@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MyApi.Data;
 using MyApi.Services;
+using SendEmail.Services;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,21 +27,21 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Registrar ITokenBlacklistService y su implementación correcta
+// Registrar ITokenBlacklistService y su implementación
 builder.Services.AddScoped<ITokenBlacklistService, InMemoryTokenBlacklistService>();
 
 // Registrar servicio de autenticación
 builder.Services.AddScoped<AuthService>();
 
-// Registrar servicio de envío de correos
-builder.Services.AddSingleton<EmailService>();
+// Registrar servicio de envío de correos con interfaz
+builder.Services.AddScoped<EmailService, EmailService>();
 
 // Obtener configuración JWT desde appsettings.json o variables de entorno
 var jwtKey = builder.Configuration["Jwt:Key"];
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 var jwtAudience = builder.Configuration["Jwt:Audience"];
 
-// Validar longitud clave JWT
+// Validar longitud de clave JWT
 var keyBytes = Encoding.UTF8.GetBytes(jwtKey!);
 if (keyBytes.Length < 32)
     throw new ArgumentException("La clave JWT debe tener al menos 32 caracteres (256 bits)");
@@ -94,7 +95,11 @@ builder.Services.AddSwaggerGen(c =>
         {
             new OpenApiSecurityScheme
             {
-                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
             },
             Array.Empty<string>()
         }
@@ -109,8 +114,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-
 
 app.UseCors("AllowAll");
 

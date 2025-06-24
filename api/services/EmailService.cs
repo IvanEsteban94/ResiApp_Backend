@@ -1,50 +1,61 @@
-﻿using System.Net;
-using System.Net.Mail;
-using Microsoft.Extensions.Configuration;
+﻿
+using SendEmail.Models;
+using MailKit.Security;
+using MimeKit.Text;
+using MimeKit;
+using MailKit.Net.Smtp;
+using api.Models.DTO;
 
-namespace api.services
+
+namespace SendEmail.Services
 {
-    public class EmailService
+    public class EmailService : IEmailService
     {
-        private readonly IConfiguration _configuration;
-        private readonly string fromEmail = "Notifications_resiapp@gmail.com";
-        private readonly string fromPassword = "TU_CONTRASEÑA_GENERADA_APP";
 
-        public EmailService(IConfiguration configuration)
+        private readonly IConfiguration _config;
+        public EmailService(IConfiguration config)
         {
-            _configuration = configuration;
+            _config = config;
         }
 
-        public async Task SendEmailAsync(string toEmail, string subject, string bodyHtml, string? cc = null)
+
+        public void SendEmail(EmailDTO request)
         {
-            var message = new MailMessage();
-            message.From = new MailAddress(fromEmail, "ResiApp Notificaciones");
-            message.To.Add(new MailAddress(toEmail));
+            var email = new MimeMessage();
 
-            if (!string.IsNullOrWhiteSpace(cc))
-                message.CC.Add(cc);
+            // Remitente
+            email.From.Add(MailboxAddress.Parse(_config["Email:UserName"]));
 
-            message.Subject = subject;
-            message.IsBodyHtml = true;
+            // Destinatario principal
+            email.To.Add(MailboxAddress.Parse(request.To));
 
-            // Diseño básico con logo (puedes mejorar estilos con CSS)
-            message.Body = $@"
-                <div style='font-family:Arial,sans-serif; padding:20px;'>
-                    <img src='https://i.ibb.co/YZXwmtM/logo.png' alt='ResiApp Logo' height='60' style='margin-bottom:20px;'/>
-                    <h2 style='color:#2C3E50;'>Notificación de ResiApp</h2>
-                    <div style='font-size:16px; color:#333;'>{bodyHtml}</div>
-                    <hr style='margin-top:30px;'>
-                    <p style='font-size:12px; color:#888;'>Este correo fue enviado automáticamente por ResiApp.</p>
-                </div>";
-
-            using var smtp = new SmtpClient("smtp.gmail.com", 587)
+            // Si hay destinatario en copia (por ejemplo, si el rol es residente)
+            if (!string.IsNullOrWhiteSpace(request.Cc))
             {
-                EnableSsl = true,
-                Credentials = new NetworkCredential(fromEmail, fromPassword)
+                email.Cc.Add(MailboxAddress.Parse(request.Cc));
+            }
+
+            email.Subject = request.Subject;
+
+            email.Body = new TextPart(TextFormat.Html)
+            {
+                Text = request.Body
             };
 
-            await smtp.SendMailAsync(message);
+            using var smtp = new SmtpClient();
+            smtp.Connect(
+                _config["Email:Host"],
+                Convert.ToInt32(_config["Email:Port"]),
+                SecureSocketOptions.StartTls
+            );
+
+            smtp.Authenticate(_config["Email:UserName"], _config["Email:PassWord"]);
+
+            smtp.Send(email);
+            smtp.Disconnect(true);
         }
+
+
+
     }
 }
-
