@@ -2,13 +2,22 @@
 {
     public class EmailDTO
     {
-        
-            public string To { get; set; }       // Email del admin
-            public string Subject { get; set; }
-            public string Body { get; set; }
-            public string Role { get; set; }     // admin o residente
-            public string? Cc { get; set; }      // Email del residente si aplica
-      
+
+        // 1. Remitente obligado
+        public string From { get; set; }
+
+        // 2. Lista de destinatarios
+        public List<string> To { get; set; } = new();
+
+        // 3. Lista de copias (opcional)
+        public List<string>? Cc { get; set; } = new();
+
+        public string Subject { get; set; }
+        public string Body { get; set; }
+
+        // "admin" o "residente"
+        public string Role { get; set; }
+
 
     }
 }

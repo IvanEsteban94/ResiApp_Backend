@@ -5,6 +5,8 @@ using MimeKit.Text;
 using MimeKit;
 using MailKit.Net.Smtp;
 using api.Models.DTO;
+using System.Net.Mail;
+using System.Net;
 
 
 namespace SendEmail.Services
@@ -21,39 +23,36 @@ namespace SendEmail.Services
 
         public void SendEmail(EmailDTO request)
         {
-            var email = new MimeMessage();
+            var mailMessage = new MailMessage();
 
-            // Remitente
-            email.From.Add(MailboxAddress.Parse(_config["Email:UserName"]));
+            // ✳️ Importante: asignar el remitente
+            mailMessage.From = new MailAddress(request.From);
 
-            // Destinatario principal
-            email.To.Add(MailboxAddress.Parse(request.To));
+            // Destinatarios
+            foreach (var to in request.To)
+                mailMessage.To.Add(to);
 
-            // Si hay destinatario en copia (por ejemplo, si el rol es residente)
-            if (!string.IsNullOrWhiteSpace(request.Cc))
+            // CC si existen
+            if (request.Cc != null)
+                foreach (var cc in request.Cc)
+                    mailMessage.CC.Add(cc);
+
+            // Asunto y cuerpo
+            mailMessage.Subject = request.Subject;
+            mailMessage.Body = request.Body;
+            mailMessage.IsBodyHtml = true;
+
+            // Configuración SMTP
+            using var smtp = new System.Net.Mail.SmtpClient("smtp.gmail.com", 587)
             {
-                email.Cc.Add(MailboxAddress.Parse(request.Cc));
-            }
-
-            email.Subject = request.Subject;
-
-            email.Body = new TextPart(TextFormat.Html)
-            {
-                Text = request.Body
+                Credentials = new NetworkCredential("notificationsresiapp@gmail.com", "pbxwqbcxtxdpelid"),
+                EnableSsl = true
             };
 
-            using var smtp = new SmtpClient();
-            smtp.Connect(
-                _config["Email:Host"],
-                Convert.ToInt32(_config["Email:Port"]),
-                SecureSocketOptions.StartTls
-            );
-
-            smtp.Authenticate(_config["Email:UserName"], _config["Email:PassWord"]);
-
-            smtp.Send(email);
-            smtp.Disconnect(true);
+            // Envío
+            smtp.Send(mailMessage);
         }
+
 
 
 
