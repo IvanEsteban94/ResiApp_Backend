@@ -7,7 +7,7 @@ using SendEmail.Models;
 namespace api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/v1/[controller]")]
     public class EmailController : ControllerBase
     {
         private readonly EmailService _emailService;
