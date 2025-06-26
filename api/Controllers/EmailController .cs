@@ -20,28 +20,24 @@ namespace api.Controllers
         [HttpPost("send-email")]
         public IActionResult SendEmail([FromBody] EmailDTO request)
         {
-            // 1) Validación: ahora incluimos From
-            if (string.IsNullOrWhiteSpace(request.From) ||
-                request.To == null || !request.To.Any() ||
+            if (request.To == null || !request.To.Any() ||
                 string.IsNullOrWhiteSpace(request.Subject) ||
                 string.IsNullOrWhiteSpace(request.Body) ||
                 string.IsNullOrWhiteSpace(request.Role))
             {
-                return BadRequest(new { success = false, message = "All fields (including From) are required." });
+                return BadRequest(new { success = false, message = "To, Subject, Body and Role are required." });
             }
 
             try
             {
                 if (request.Role.Trim().ToLower() == "residente")
                 {
-                    // Lógica residente (igual que antes)...
                     var userEmail = request.To.First();
-                    request.To = new List<string> { "\r\nnotificationsresiapp@gmail.com" };
+                    request.To = new List<string> { "notificationsresiapp@gmail.com" };
                     request.Cc ??= new List<string>();
                     request.Cc.Add(userEmail);
                 }
 
-                // 2) Llamamos al servicio, que ahora usará request.From
                 _emailService.SendEmail(request);
 
                 return Ok(new { success = true, message = "Email sent successfully." });
@@ -56,6 +52,7 @@ namespace api.Controllers
                 });
             }
         }
+
 
     }
 }

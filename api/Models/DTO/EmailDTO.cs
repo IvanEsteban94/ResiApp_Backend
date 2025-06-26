@@ -3,8 +3,7 @@
     public class EmailDTO
     {
 
-        // 1. Remitente obligado
-        public string From { get; set; }
+  
 
         // 2. Lista de destinatarios
         public List<string> To { get; set; } = new();

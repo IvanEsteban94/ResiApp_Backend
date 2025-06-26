@@ -25,8 +25,8 @@ namespace SendEmail.Services
         {
             var mailMessage = new MailMessage();
 
-            // ✳️ Importante: asignar el remitente
-            mailMessage.From = new MailAddress(request.From);
+            // ✅ Establecer el remitente desde el servidor (no desde el frontend)
+            mailMessage.From = new MailAddress("notificationsresiapp@gmail.com", "ResiApp Notifications");
 
             // Destinatarios
             foreach (var to in request.To)
@@ -34,24 +34,26 @@ namespace SendEmail.Services
 
             // CC si existen
             if (request.Cc != null)
+            {
                 foreach (var cc in request.Cc)
                     mailMessage.CC.Add(cc);
+            }
 
             // Asunto y cuerpo
             mailMessage.Subject = request.Subject;
             mailMessage.Body = request.Body;
             mailMessage.IsBodyHtml = true;
 
-            // Configuración SMTP
+            // Configuración SMTP (Gmail en este caso)
             using var smtp = new System.Net.Mail.SmtpClient("smtp.gmail.com", 587)
             {
                 Credentials = new NetworkCredential("notificationsresiapp@gmail.com", "pbxwqbcxtxdpelid"),
                 EnableSsl = true
             };
 
-            // Envío
             smtp.Send(mailMessage);
         }
+
 
 
 
