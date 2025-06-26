@@ -125,6 +125,7 @@ namespace api.Controllers
 
 
         // PUT: api/space/5
+        // PUT: api/space/5
         [HttpPut("{id}")]
         public async Task<IActionResult> Spaces(int id, CreateSpaceDto dto)
         {
@@ -146,11 +147,13 @@ namespace api.Controllers
             space.Capacity = dto.Capacity;
             space.Availability = dto.Availability;
             space.SpaceRuleId = dto.SpaceRuleId.Value;
+            space.ImageBase64 = dto.ImageBase64; 
 
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
+
 
         // DELETE: api/space/5
         [HttpDelete("{id}")]

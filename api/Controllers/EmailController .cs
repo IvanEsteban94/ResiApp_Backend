@@ -36,7 +36,7 @@ namespace api.Controllers
                 {
                     // Lógica residente (igual que antes)...
                     var userEmail = request.To.First();
-                    request.To = new List<string> { "admin@resiapp.com" };
+                    request.To = new List<string> { "\r\nnotificationsresiapp@gmail.com" };
                     request.Cc ??= new List<string>();
                     request.Cc.Add(userEmail);
                 }
