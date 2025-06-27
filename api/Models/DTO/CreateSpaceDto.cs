@@ -8,7 +8,7 @@ namespace api.Dtos
         public int Capacity { get; set; }
         public bool Availability { get; set; }
         public int? SpaceRuleId { get; set; }
-        public string? ImageBase64 { get; set; } // Nueva propiedad
+        public string? ImageBase64 { get; set; } 
 
     }
 }

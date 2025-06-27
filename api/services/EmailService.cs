@@ -21,38 +21,38 @@ namespace SendEmail.Services
         }
 
 
-        public void SendEmail(EmailDTO request)
-        {
-            var mailMessage = new MailMessage();
+      public void SendEmail(EmailDTO request)
+{
+    var mailMessage = new MailMessage();
 
-            // ✅ Establecer el remitente desde el servidor (no desde el frontend)
-            mailMessage.From = new MailAddress("notificationsresiapp@gmail.com", "ResiApp Notifications");
+    // ✅ Establecer el remitente desde el servidor (no desde el frontend)
+    mailMessage.From = new MailAddress("notificationsresiapp@gmail.com", "ResiApp Notifications");
 
-            // Destinatarios
-            foreach (var to in request.To)
-                mailMessage.To.Add(to);
+    // Destinatarios
+    foreach (var to in request.To)
+        mailMessage.To.Add(to);
 
-            // CC si existen
-            if (request.Cc != null)
-            {
-                foreach (var cc in request.Cc)
-                    mailMessage.CC.Add(cc);
-            }
+    // CC si existen
+    if (request.Cc != null)
+    {
+        foreach (var cc in request.Cc)
+            mailMessage.CC.Add(cc);
+    }
 
-            // Asunto y cuerpo
-            mailMessage.Subject = request.Subject;
-            mailMessage.Body = request.Body;
-            mailMessage.IsBodyHtml = true;
+    // Asunto y cuerpo
+    mailMessage.Subject = request.Subject;
+    mailMessage.Body = request.Body;
+    mailMessage.IsBodyHtml = true;
 
-            // Configuración SMTP (Gmail en este caso)
-            using var smtp = new System.Net.Mail.SmtpClient("smtp.gmail.com", 587)
-            {
-                Credentials = new NetworkCredential("notificationsresiapp@gmail.com", "pbxwqbcxtxdpelid"),
-                EnableSsl = true
-            };
+    // Configuración SMTP (Gmail en este caso)
+    using var smtp = new System.Net.Mail.SmtpClient("smtp.gmail.com", 587)
+    {
+        Credentials = new NetworkCredential("notificationsresiapp@gmail.com", "pbxwqbcxtxdpelid"), 
+        EnableSsl = true
+    };
 
-            smtp.Send(mailMessage);
-        }
+    smtp.Send(mailMessage);
+}
 
 
 

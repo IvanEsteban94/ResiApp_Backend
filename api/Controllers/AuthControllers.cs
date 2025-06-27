@@ -1,9 +1,14 @@
 ﻿using api.Models.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Logging;
+using Microsoft.IdentityModel.Tokens;
 using MyApi.Models.DTO;
 using MyApi.Services;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace MyApi.Controllers
 {
@@ -11,24 +16,71 @@ namespace MyApi.Controllers
     [Route("/api/v1/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly AuthService _auth;
 
-        public AuthController(AuthService auth)
+        private readonly AuthService _auth;
+        private readonly IConfiguration _config;
+        public AuthController(AuthService auth, IConfiguration config)
         {
             _auth = auth;
+            _config = config;
         }
-        [Authorize]
+
+
         [HttpGet("validate-token")]
-        public IActionResult ValidateToken()
+        public IActionResult ValidateToken([FromHeader(Name = "Authorization")] string authorizationHeader)
         {
-            var email = User.FindFirstValue(ClaimTypes.Email);
+            IdentityModelEventSource.ShowPII = true;
 
-            if (string.IsNullOrEmpty(email))
-                return Unauthorized(new { valid = false, message = "Invalid token." });
+            if (string.IsNullOrEmpty(authorizationHeader) || !authorizationHeader.StartsWith("Bearer "))
+            {
+                return Unauthorized(new { valid = false, message = "No token provided or invalid format." });
+            }
 
-            return Ok(new { valid = true, message = "Token is valid.", email });
+            var token = authorizationHeader.Substring("Bearer ".Length).Trim();
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]);
+
+            try
+            {
+                tokenHandler.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+
+                    ValidateIssuer = true,
+                    ValidIssuer = _config["Jwt:Issuer"],
+
+                    ValidateAudience = true,
+                    ValidAudience = _config["Jwt:Audience"],
+
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
+                }, out SecurityToken validatedToken);
+
+                var jwtToken = (JwtSecurityToken)validatedToken;
+
+                var email = jwtToken.Claims.FirstOrDefault(c =>
+                    c.Type == ClaimTypes.Email || c.Type == "email" ||
+                    c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")?.Value;
+
+                if (string.IsNullOrEmpty(email))
+                    return Unauthorized(new { valid = false, message = "Email claim not found." });
+
+                return Ok(new { valid = true, message = "Token is valid.", email });
+            }
+            catch (SecurityTokenExpiredException)
+            {
+                return Unauthorized(new { valid = false, message = "Token expired." });
+            }
+            catch (SecurityTokenException ex)
+            {
+                return Unauthorized(new { valid = false, message = $"Token invalid: {ex.Message}" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { valid = false, message = $"An error occurred: {ex.Message}" });
+            }
         }
-
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterResidentRequest request)
         {
