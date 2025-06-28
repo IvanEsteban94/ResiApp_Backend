@@ -97,6 +97,7 @@ namespace api.Controllers
                     reservation.Space.SpaceName,
                     reservation.Space.Capacity,
                     reservation.Space.Availability,
+                    reservation.Space.ImageBase64, 
                     Rule = reservation.Space.SpaceRule == null ? null : new
                     {
                         reservation.Space.SpaceRule.Id,
@@ -108,12 +109,13 @@ namespace api.Controllers
             return Ok(new { success = true, data = response });
         }
 
+
         // GET api/reservation/5  => reserva por id
         [HttpGet("findReservationsById/{id}")]
         public async Task<IActionResult> findReservationsById(int id)
         {
             var reservation = await _dbContext.Reservation
-                .Include(r => r.Resident) // Incluye el Resident
+                .Include(r => r.Resident)
                 .Include(r => r.Space)
                     .ThenInclude(s => s.SpaceRule)
                 .FirstOrDefaultAsync(r => r.Id == id);
@@ -140,6 +142,7 @@ namespace api.Controllers
                     reservation.Space.SpaceName,
                     reservation.Space.Capacity,
                     reservation.Space.Availability,
+                    reservation.Space.ImageBase64,
                     Rule = reservation.Space.SpaceRule == null ? null : new
                     {
                         reservation.Space.SpaceRule.Id,
@@ -150,6 +153,7 @@ namespace api.Controllers
 
             return Ok(new { success = true, data = response });
         }
+
 
         [HttpPost]
         public async Task<IActionResult> Reservations([FromBody] ReservationDto reservationDto)
