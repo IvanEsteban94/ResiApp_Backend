@@ -57,7 +57,8 @@ namespace api.Controllers
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 ApartmentInformation = dto.ApartmentInformation,
                 Role = dto.Role,
-                SecurityWord = BCrypt.Net.BCrypt.HashPassword(dto.SecurityWord) // Hasheando SecurityWord
+                SecurityWord = BCrypt.Net.BCrypt.HashPassword(dto.SecurityWord),
+                ImageBase64 = dto.ImageBase64 
             };
 
             _db.User.Add(user);
@@ -90,7 +91,6 @@ namespace api.Controllers
             if (!string.IsNullOrWhiteSpace(dto.Role))
                 user.Role = dto.Role;
 
-            // ✅ Si Password no es nulo ni vacío, validarlo y actualizarlo
             if (!string.IsNullOrWhiteSpace(dto.Password))
             {
                 if (dto.Password.Length < 6)
@@ -104,7 +104,21 @@ namespace api.Controllers
 
                 user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             }
-            // 🚫 Si viene vacío o nulo, no hacer nada con la contraseña (se conserva)
+
+            // ✅ Agregar o actualizar imagen base64 si se proporciona
+            if (!string.IsNullOrWhiteSpace(dto.ImageBase64))
+            {
+                if (!dto.ImageBase64.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase))
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Image must be in base64 format and include a valid data URI prefix (e.g., data:image/png;base64,...)"
+                    });
+                }
+
+                user.ImageBase64 = dto.ImageBase64;
+            }
 
             _db.User.Update(user);
             _db.SaveChanges();
@@ -115,6 +129,7 @@ namespace api.Controllers
                 message = "User updated successfully."
             });
         }
+
 
 
 

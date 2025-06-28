@@ -17,6 +17,12 @@ namespace api.Models.DTO
 
         public string? Role { get; set; }
         public string? SecurityWord { get; set; }
+       
+        public string? ImageBase64
+        {
+            get; set;
+        }
+
 
     }
 }
