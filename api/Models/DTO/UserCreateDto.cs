@@ -16,7 +16,7 @@ namespace api.Models.DTO
         public string? ApartmentInformation { get; set; }
 
         public string? Role { get; set; }
-        public string? SecurityWord { get; set; }
+
        
         public string? ImageBase64
         {

@@ -57,7 +57,6 @@ namespace api.Controllers
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 ApartmentInformation = dto.ApartmentInformation,
                 Role = dto.Role,
-                SecurityWord = BCrypt.Net.BCrypt.HashPassword(dto.SecurityWord),
                 ImageBase64 = dto.ImageBase64 
             };
 
