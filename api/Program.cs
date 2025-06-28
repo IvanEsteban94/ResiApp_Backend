@@ -27,8 +27,8 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Registrar ITokenBlacklistService y su implementación
-builder.Services.AddScoped<ITokenBlacklistService, InMemoryTokenBlacklistService>();
+// Registrar ITokenBlacklistService como Singleton
+builder.Services.AddSingleton<ITokenBlacklistService, InMemoryTokenBlacklistService>();
 
 // Registrar servicio de autenticación
 builder.Services.AddScoped<AuthService>();

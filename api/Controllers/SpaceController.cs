@@ -30,7 +30,7 @@ namespace api.Controllers
                     SpaceName = s.SpaceName,
                     Capacity = s.Capacity,
                     Availability = s.Availability,
-                    ImageBase64 = s.ImageBase64, // <-- Agregado
+                    ImageBase64 = s.ImageBase64,
                     SpaceRules = s.SpaceRule != null
                         ? new List<SpaceRule>
                         {
@@ -65,7 +65,7 @@ namespace api.Controllers
                 SpaceName = space.SpaceName,
                 Capacity = space.Capacity,
                 Availability = space.Availability,
-                ImageBase64 = space.ImageBase64, // <-- Agregado
+                ImageBase64 = space.ImageBase64,
                 SpaceRules = space.SpaceRule != null
                     ? new List<SpaceRule>
                     {

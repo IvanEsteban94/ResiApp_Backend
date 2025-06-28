@@ -5,24 +5,27 @@ namespace api.services
 {
     public class InMemoryTokenBlacklistService : ITokenBlacklistService
     {
-        private readonly ConcurrentDictionary<string, DateTime> _blacklist = new();
+        private readonly ConcurrentDictionary<string, DateTime> _revokedTokens = new();
 
         public Task AddAsync(string token, DateTime expires)
         {
-            _blacklist[token] = expires;
+            _revokedTokens[token] = expires;
             return Task.CompletedTask;
         }
 
         public Task<bool> IsTokenRevokedAsync(string token)
         {
-            if (_blacklist.TryGetValue(token, out var expiration))
+            if (_revokedTokens.TryGetValue(token, out var expiration))
             {
-                if (expiration > DateTime.UtcNow)
+                if (DateTime.UtcNow < expiration)
+                {
                     return Task.FromResult(true);
-
-                _blacklist.TryRemove(token, out _);
+                }
+                else
+                {
+                    _revokedTokens.TryRemove(token, out _);
+                }
             }
-
             return Task.FromResult(false);
         }
     }

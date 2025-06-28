@@ -1,4 +1,5 @@
-﻿using api.Models.DTO;
+﻿using api.Interface;
+using api.Models.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Logging;
@@ -27,7 +28,9 @@ namespace MyApi.Controllers
 
 
         [HttpGet("validate-token")]
-        public IActionResult ValidateToken([FromHeader(Name = "Authorization")] string authorizationHeader)
+        public async Task<IActionResult> ValidateToken(
+          [FromHeader(Name = "Authorization")] string authorizationHeader,
+          [FromServices] ITokenBlacklistService blacklistService)
         {
             IdentityModelEventSource.ShowPII = true;
 
@@ -37,6 +40,13 @@ namespace MyApi.Controllers
             }
 
             var token = authorizationHeader.Substring("Bearer ".Length).Trim();
+
+            // 🔒 Verificamos si el token fue revocado
+            if (await blacklistService.IsTokenRevokedAsync(token))
+            {
+                return Unauthorized(new { valid = false, message = "Token has been revoked." });
+            }
+
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]);
 
@@ -81,6 +91,8 @@ namespace MyApi.Controllers
                 return BadRequest(new { valid = false, message = $"An error occurred: {ex.Message}" });
             }
         }
+
+
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterResidentRequest request)
         {
@@ -160,19 +172,22 @@ namespace MyApi.Controllers
 
 
         [HttpPost("logout")]
-        public async Task<IActionResult> Logout()
+        public async Task<IActionResult> Logout(
+       [FromHeader(Name = "Authorization")] string authorizationHeader,
+       [FromServices] ITokenBlacklistService blacklistService)
         {
-            var authHeader = Request.Headers["Authorization"].ToString();
+            if (string.IsNullOrEmpty(authorizationHeader) || !authorizationHeader.StartsWith("Bearer "))
+                return BadRequest(new { message = "Invalid token format." });
 
-            if (string.IsNullOrWhiteSpace(authHeader) || !authHeader.StartsWith("Bearer "))
-            {
-                return Ok(new { message = "No token provided, logout considered successful." });
-            }
+            var token = authorizationHeader["Bearer ".Length..].Trim();
+            var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
 
-            var token = authHeader.Substring("Bearer ".Length);
-            await _auth.LogoutAsync(token);
+            await blacklistService.AddAsync(token, jwt.ValidTo);
 
-            return Ok(new { message = "Logged out successfully" });
+            return Ok(new { message = "Token revoked successfully." });
         }
+
+
+
     }
 }
