@@ -23,24 +23,14 @@ namespace MyApi.Services
             _config = config;
             _blacklist = blacklist;
         }
-        public async Task<bool> UpdateSecurityWordAsync(string email, string currentWord, string newWord)
-        {
-            var user = await _context.User.FirstOrDefaultAsync(u => u.Email == email);
-            if (user == null || user.SecurityWord != currentWord)
-                return false;
+       
 
-            user.SecurityWord = newWord;
-            _context.User.Update(user);
-            await _context.SaveChangesAsync();
-            return true;
-        }
-
-        public async Task<string?> RegisterAsync(string email, string password, string role, string? residentName = null, string? apartmentInfo = null, string? securityWord = null)
+        public async Task<string?> RegisterAsync(string email, string password, string role, string? residentName = null, string? apartmentInfo = null)
         {
             if (await UserExists(email)) return null;
 
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
-            var hashedSecurityWord = PasswordUtils.Hash(securityWord ?? "");
+        
 
             var user = new User
             {
@@ -48,8 +38,8 @@ namespace MyApi.Services
                 PasswordHash = hashedPassword,
                 Role = role,
                 ResidentName = role == "Resident" ? residentName : null,
-                ApartmentInformation = role == "Resident" ? apartmentInfo : null,
-                SecurityWord = hashedSecurityWord
+                ApartmentInformation = role == "Resident" ? apartmentInfo : null
+            
             };
 
             _context.User.Add(user);
@@ -75,14 +65,12 @@ namespace MyApi.Services
             };
         }
 
-        public async Task<bool> ChangePasswordAsync(string email, string newPassword, string securityWord)
+        public async Task<bool> ChangePasswordAsync(string email, string newPassword)
         {
             var user = await _context.User.FirstOrDefaultAsync(u => u.Email == email);
             if (user == null) return false;
 
-            if (!PasswordUtils.VerifySecurityWord(securityWord, user.SecurityWord)) return false;
-
-        
+           
 
             user.PasswordHash = PasswordUtils.Hash(newPassword);
             await _context.SaveChangesAsync();

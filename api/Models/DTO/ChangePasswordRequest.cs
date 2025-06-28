@@ -10,7 +10,6 @@ namespace api.Models.DTO
         [Required]
         public string NewPassword { get; set; } = null!;
 
-        [Required]
-        public string SecurityWord { get; set; } = null!;
+       
     }
 }

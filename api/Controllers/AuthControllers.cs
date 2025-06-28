@@ -103,8 +103,8 @@ namespace MyApi.Controllers
                 request.Password,
                 defaultRole,
                 request.ResidentName,
-                request.ApartmentInformation,
-                request.SecurityWord  // ✅ Agregado aquí
+                request.ApartmentInformation
+                
             );
 
             if (token == null)
@@ -153,16 +153,14 @@ namespace MyApi.Controllers
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Email) ||
-                string.IsNullOrWhiteSpace(request.NewPassword) ||
-                string.IsNullOrWhiteSpace(request.SecurityWord))
+                string.IsNullOrWhiteSpace(request.NewPassword))
             {
                 return BadRequest("All fields are required.");
             }
 
             var success = await _auth.ChangePasswordAsync(
                 request.Email,
-                request.NewPassword,
-                request.SecurityWord);
+                request.NewPassword);
 
             if (!success)
                 return BadRequest("Current password or security word is incorrect.");
