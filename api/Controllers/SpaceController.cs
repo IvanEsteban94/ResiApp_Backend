@@ -95,7 +95,7 @@ namespace api.Controllers
             var spaceRuleExists = await _context.SpaceRule.AnyAsync(sr => sr.Id == dto.SpaceRuleId.Value);
             if (!spaceRuleExists)
             {
-                return BadRequest($"No existe SpaceRule con Id {dto.SpaceRuleId}");
+                return BadRequest($"There is no SpaceRule with Id {dto.SpaceRuleId}");
             }
 
             var space = new Space
@@ -139,7 +139,7 @@ namespace api.Controllers
             var spaceRuleExists = await _context.SpaceRule.AnyAsync(sr => sr.Id == dto.SpaceRuleId.Value);
             if (!spaceRuleExists)
             {
-                return BadRequest($"No existe SpaceRule con Id {dto.SpaceRuleId}");
+                return BadRequest($"There is no SpaceRule with Id {dto.SpaceRuleId}");
             }
 
             space.SpaceName = dto.SpaceName;

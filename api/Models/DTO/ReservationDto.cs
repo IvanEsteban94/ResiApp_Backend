@@ -17,7 +17,6 @@ namespace api.Models.DTO
         [Required(ErrorMessage = "El campo SpaceId es obligatorio.")]
         public int SpaceId { get; set; }
 
-        // Validación personalizada para verificar que EndTime sea mayor que StartTime
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (EndTime <= StartTime)

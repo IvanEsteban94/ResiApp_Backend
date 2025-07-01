@@ -11,10 +11,9 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Agregar controladores
 builder.Services.AddControllers();
 
-// Configurar CORS para permitir todo (ajusta según necesites)
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -23,30 +22,28 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader());
 });
 
-// Configurar conexión a base de datos SQL Server
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Registrar ITokenBlacklistService como Singleton
+
 builder.Services.AddSingleton<ITokenBlacklistService, InMemoryTokenBlacklistService>();
 
-// Registrar servicio de autenticación
 builder.Services.AddScoped<AuthService>();
 
-// Registrar servicio de envío de correos con interfaz
+
 builder.Services.AddScoped<EmailService, EmailService>();
 
-// Obtener configuración JWT desde appsettings.json o variables de entorno
 var jwtKey = builder.Configuration["Jwt:Key"];
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 var jwtAudience = builder.Configuration["Jwt:Audience"];
 
-// Validar longitud de clave JWT
+
 var keyBytes = Encoding.UTF8.GetBytes(jwtKey!);
 if (keyBytes.Length < 32)
     throw new ArgumentException("La clave JWT debe tener al menos 32 caracteres (256 bits)");
 
-// Configurar autenticación JWT
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -75,7 +72,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Configurar Swagger con soporte JWT
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -108,7 +105,7 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Middleware para desarrollo
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

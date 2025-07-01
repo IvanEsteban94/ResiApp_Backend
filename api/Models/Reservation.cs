@@ -7,7 +7,7 @@
         public DateTime EndTime { get; set; }
 
         public int ResidentId { get; set; }
-        public User Resident { get; set; } = null!; // ✅ Relación directa
+        public User Resident { get; set; } = null!; 
 
         public int SpaceId { get; set; }
         public Space Space { get; set; } = null!;

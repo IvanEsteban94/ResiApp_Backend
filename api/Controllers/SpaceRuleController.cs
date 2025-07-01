@@ -34,7 +34,7 @@ namespace api.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Error al guardar regla en la base de datos.", detail = ex.Message });
+                return StatusCode(500, new { message = "Error saving rule to database.", detail = ex.Message });
             }
 
             var result = new ReadSpaceRuleDto

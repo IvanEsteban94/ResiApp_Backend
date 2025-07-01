@@ -28,7 +28,7 @@ namespace api.Controllers
                 .ToListAsync();
 
             if (reviews == null || reviews.Count == 0)
-                return NotFound("No se encontraron reseñas.");
+                return NotFound("No reviews found");
 
             var response = reviews.Select(r => new
             {
@@ -74,7 +74,7 @@ namespace api.Controllers
                 .ToListAsync();
 
             if (reviews == null || reviews.Count == 0)
-                return NotFound($"No se encontraron reseñas para el residente con ID {residentId}");
+                return NotFound($"No reviews found for Resident with ID {residentId}");
 
             var response = reviews.Select(r => new
             {
@@ -104,18 +104,18 @@ namespace api.Controllers
         public async Task<ActionResult<Review>> CreateReview([FromBody] CreateReviewDto dto)
         {
             if (dto.ResidentId == 0)
-                return BadRequest("ResidentId no puede ser cero.");
+                return BadRequest("ResidentId cannot be zero.");
 
             var residentExists = await _context.User.AnyAsync(u => u.Id == dto.ResidentId);
             if (!residentExists)
-                return BadRequest($"No se encontró un residente con ID {dto.ResidentId}");
+                return BadRequest($"No resident with ID found {dto.ResidentId}");
 
             if (dto.SpaceId == null || dto.SpaceId == 0)
-                return BadRequest("SpaceId no puede ser nulo o cero.");
+                return BadRequest("SpaceId cannot be null or zero.");
 
             var spaceExists = await _context.Space.AnyAsync(s => s.Id == dto.SpaceId.Value);
             if (!spaceExists)
-                return BadRequest($"No se encontró un espacio con ID {dto.SpaceId.Value}");
+                return BadRequest($"No space found with ID {dto.SpaceId.Value}");
 
             var review = new Review
             {
