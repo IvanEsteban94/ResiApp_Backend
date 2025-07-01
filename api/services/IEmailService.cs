@@ -1,5 +1,4 @@
-﻿using api.Models.DTO;
-using SendEmail.Models;
+﻿using SendEmail.Models;
 
 
 namespace SendEmail.Services

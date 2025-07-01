@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using api.Models;
 using MyApi.Data;
 using api.Models.DTO;
-using api.Dtos;
 
 namespace api.Controllers
 {
@@ -128,7 +126,7 @@ namespace api.Controllers
             _context.Review.Add(review);
             await _context.SaveChangesAsync();
 
-            // Devuelve solo datos primitivos (sin objetos anidados)
+            
             return CreatedAtAction(nameof(findReviewsById), new { id = review.Id }, new
             {
                 review.Id,

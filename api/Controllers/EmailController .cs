@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using api.Models.DTO;
-using api.services;
 using SendEmail.Services;
 using SendEmail.Models;
 

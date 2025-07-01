@@ -1,6 +1,6 @@
 ﻿using api.Interface;
 using api.Models.DTO;
-using Microsoft.AspNetCore.Authorization;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
@@ -9,7 +9,6 @@ using MyApi.Services;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace MyApi.Controllers
 {
@@ -41,7 +40,7 @@ namespace MyApi.Controllers
 
             var token = authorizationHeader.Substring("Bearer ".Length).Trim();
 
-            // 🔒 Verificamos si el token fue revocado
+            
             if (await blacklistService.IsTokenRevokedAsync(token))
             {
                 return Unauthorized(new { valid = false, message = "Token has been revoked." });
@@ -122,7 +121,7 @@ namespace MyApi.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            // Obtener token anterior del header Authorization (si existe)
+          
             var authHeader = Request.Headers["Authorization"].ToString();
             string? oldToken = null;
             bool? oldTokenValid = null;
@@ -133,7 +132,6 @@ namespace MyApi.Controllers
                 oldTokenValid = !await _auth.IsTokenRevokedAsync(oldToken);
             }
 
-            // Proceso normal de login
             var response = await _auth.LoginAsync(request.Email, request.Password);
             if (response == null)
                 return Unauthorized("Invalid credentials.");

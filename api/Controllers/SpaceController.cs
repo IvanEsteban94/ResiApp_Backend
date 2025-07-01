@@ -1,6 +1,5 @@
 ﻿using api.Dtos;
 using api.Models;
-using api.Models.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MyApi.Data;
@@ -83,7 +82,7 @@ namespace api.Controllers
 
 
 
-        // POST: api/space
+   
         [HttpPost]
         public async Task<ActionResult<SpaceDto>> Spaces(CreateSpaceDto dto)
         {
@@ -124,7 +123,7 @@ namespace api.Controllers
         }
 
 
-        // PUT: api/space/5
+     
         [HttpPut("{id}")]
         public async Task<IActionResult> Spaces(int id, CreateSpaceDto dto)
         {
@@ -154,7 +153,7 @@ namespace api.Controllers
         }
 
 
-        // DELETE: api/space/5
+      
         [HttpDelete("{id}")]
         public async Task<IActionResult> Spaces(int id)
         {

@@ -1,5 +1,4 @@
-﻿using BCrypt.Net;
-namespace api.Utilidy
+﻿namespace api.Utilidy
 {
     public class PasswordUtils
     {

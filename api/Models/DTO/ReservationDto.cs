@@ -1,20 +1,20 @@
-﻿using System;
+﻿
 using System.ComponentModel.DataAnnotations;
 
 namespace api.Models.DTO
 {
     public class ReservationDto : IValidatableObject
     {
-        [Required(ErrorMessage = "El campo StartTime es obligatorio.")]
+        [Required(ErrorMessage = "The StartTime field is required.")]
         public DateTime StartTime { get; set; }
 
-        [Required(ErrorMessage = "El campo EndTime es obligatorio.")]
+        [Required(ErrorMessage = "The EndTime field is required.")]
         public DateTime EndTime { get; set; }
 
-        [Required(ErrorMessage = "El campo ResidentId es obligatorio.")]
+        [Required(ErrorMessage = "The ResidentId field is required.")]
         public int ResidentId { get; set; }
 
-        [Required(ErrorMessage = "El campo SpaceId es obligatorio.")]
+        [Required(ErrorMessage = "The SpaceId field is required.")]
         public int SpaceId { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
@@ -22,7 +22,7 @@ namespace api.Models.DTO
             if (EndTime <= StartTime)
             {
                 yield return new ValidationResult(
-                    "El campo EndTime debe ser mayor que StartTime.",
+                    "The EndTime field must be greater than StartTime.",
                     new[] { nameof(EndTime) }
                 );
             }

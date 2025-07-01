@@ -1,13 +1,8 @@
 ﻿using api.Models;
 using api.Models.DTO;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MyApi.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace api.Controllers
 {
@@ -22,7 +17,7 @@ namespace api.Controllers
             _dbContext = db;
         }
 
-        // GET api/reservation/user/5  => reservas por usuario
+    
         [HttpGet("findReservationsByUser/{residentId}")]
         public async Task<IActionResult> findReservationsByUser(int residentId)
         {
@@ -68,7 +63,7 @@ namespace api.Controllers
             return Ok(new { success = true, data = response });
         }
 
-        // GET api/reservation  => todas las reservas
+      
         [HttpGet]
         public async Task<IActionResult> findReservations()
         {
@@ -110,7 +105,7 @@ namespace api.Controllers
         }
 
 
-        // GET api/reservation/5  => reserva por id
+      
         [HttpGet("findReservationsById/{id}")]
         public async Task<IActionResult> findReservationsById(int id)
         {
@@ -254,7 +249,6 @@ namespace api.Controllers
         }
 
 
-        // DELETE api/reservation/5  => eliminar reserva (solo admin)
         [HttpDelete("{id}")]
       
         public async Task<IActionResult> Reservations(int id)
@@ -284,11 +278,10 @@ namespace api.Controllers
             if (date.Date < DateTime.Today)
                 return BadRequest(new { success = false, message = "Cannot view or make reservations for past dates." });
 
-            // Rango horario del día: 08:00 a 20:00
+           
             var startOfDay = date.Date.AddHours(8);
             var endOfDay = date.Date.AddHours(20);
 
-            // Traer reservas del espacio para ese día
             var reservations = await _dbContext.Reservation
                 .Where(r => r.SpaceId == spaceId &&
                             r.StartTime < endOfDay &&
@@ -303,19 +296,18 @@ namespace api.Controllers
                 var currentEnd = currentStart.AddMinutes(slotMinutes);
                 if (currentEnd > endOfDay) break;
 
-                // Revisar si el slot se solapa con alguna reserva
                 var overlappingReservations = reservations
                     .Where(r => currentStart < r.EndTime && currentEnd > r.StartTime)
                     .ToList();
 
-                // Si hay solapamiento, no es válido
+          
                 if (overlappingReservations.Any())
                 {
                     currentStart = currentStart.AddMinutes(slotMinutes);
                     continue;
                 }
 
-                // Slot disponible
+            
                 availableSlots.Add(new
                 {
                     StartTime = currentStart.ToString("yyyy-MM-ddTHH:mm:ss"),

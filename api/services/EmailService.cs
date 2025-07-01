@@ -1,10 +1,5 @@
 ﻿
 using SendEmail.Models;
-using MailKit.Security;
-using MimeKit.Text;
-using MimeKit;
-using MailKit.Net.Smtp;
-using api.Models.DTO;
 using System.Net.Mail;
 using System.Net;
 

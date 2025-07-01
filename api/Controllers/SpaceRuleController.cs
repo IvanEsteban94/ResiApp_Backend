@@ -3,8 +3,7 @@ using api.Models.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MyApi.Data;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+
 
 namespace api.Controllers
 {

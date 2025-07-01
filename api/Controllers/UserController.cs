@@ -1,8 +1,8 @@
-﻿using api.Models;
+﻿
 using api.Models.DTO;
 using Microsoft.AspNetCore.Mvc;
 using MyApi.Data;
-using System.Linq;
+
 
 namespace api.Controllers
 {
@@ -17,7 +17,6 @@ namespace api.Controllers
             _db = db;
         }
 
-        // GET api/user
         [HttpGet]
         public IActionResult findUser()
         {
@@ -29,7 +28,6 @@ namespace api.Controllers
             return Ok(new { success = true, data = users });
         }
 
-        // GET api/user/5
         [HttpGet("findUserById/{id}")]
         public IActionResult findUserById(int id)
         {
@@ -40,7 +38,7 @@ namespace api.Controllers
             return Ok(new { success = true, data = user });
         }
 
-        // POST api/user
+       
         [HttpPost]
         public IActionResult User([FromBody] UserCreateDto dto)
         {
@@ -104,7 +102,7 @@ namespace api.Controllers
                 user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             }
 
-            // ✅ Agregar o actualizar imagen base64 si se proporciona
+
             if (!string.IsNullOrWhiteSpace(dto.ImageBase64))
             {
                 if (!dto.ImageBase64.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase))
@@ -132,7 +130,6 @@ namespace api.Controllers
 
 
 
-        // DELETE api/user/5
         [HttpDelete("{id}")]
         public IActionResult User(int id)
         {
